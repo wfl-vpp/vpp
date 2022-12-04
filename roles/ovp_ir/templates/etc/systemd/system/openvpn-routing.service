@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenVPN Routing Service
+Wants=openvpn-irserver.service
+After=openvpn-irserver.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart={{ ip_bin_path }} rule add from 10.20.30.0/24 table ovpn
+ExecStart={{ ip_bin_path }} route add 10.200.0.0/24 dev tun0 src 10.200.0.2 table ovpn
+ExecStart={{ ip_bin_path }} route add default via 10.200.0.1 dev tun0 table ovpn
+ExecStop={{ ip_bin_path }} rule del from 10.20.30.0/24 table ovpn
+ExecStop={{ ip_bin_path }} route del default via 10.200.0.1 dev tun0 table ovpn
+ExecStop={{ ip_bin_path }} route del 10.200.0.0/24 dev tun0 src 10.200.0.2 table ovpn
+
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

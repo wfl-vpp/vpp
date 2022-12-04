@@ -1,0 +1,19 @@
+---
+- name: Ubuntu 22.04 Setup
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '22.04'
+  block:
+    - name: Removing a client
+      when: operation == "remove"
+      import_tasks: "rmclient_ubuntu_22.04.yml"
+      tags:
+        - rmclient
+        - ir
+    - name: Adding a client
+      when: operation == "add"
+      import_tasks: "addclient_ubuntu_22.04.yml"
+      tags:
+        - addclient
+        - ir
+

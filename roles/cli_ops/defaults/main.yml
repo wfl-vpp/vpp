@@ -1,0 +1,30 @@
+# Default variables for Ubuntu systems
+---
+output_conf_dir: "/tmp/configs/"
+
+target_ssh_key: "keys/ubuntu_{{ inventory_hostname }}_ssh_key.pem"
+ansible_ssh_private_key_file: "{{ target_ssh_key }}"
+ovpn_root: "/opt/ovpn"
+ovpn_pki: "{{ ovpn_root }}/pki"
+
+client_root: "{{ ovpn_root }}/clients"
+
+# EasyRSA settings
+easyrsa_root: "/opt/easyrsa"
+easyrsa_pki: "{{ easyrsa_root }}/pki"
+easyrsa_src: "{{ easyrsa_root }}/src/easyrsa3"
+easyrsa_srv_k: "{{ ovpn_pki }}/.srvk"
+easyrsa_cert_country: "IR" 
+easyrsa_cert_province: "Tehran"
+easyrsa_cert_city: "Tehran"
+easyrsa_cert_org: "Free"
+easyrsa_cert_email: "free@freedom.org"
+easyrsa_cert_orgunit: "Women"
+easyrsa_cert_CN: "RSA"
+
+verbosity: 1
+ovpn_IS_client_proto: "tcp-client"
+is_server_port: 443
+
+ic_logpath: "/var/log/openvpn-client.log"  # log path for client part on iran server
+

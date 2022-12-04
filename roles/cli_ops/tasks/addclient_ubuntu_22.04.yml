@@ -1,0 +1,40 @@
+---
+- name: Adding a client to the serve
+  debug:
+    msg: "Adding a client to {{ inventory_hostname }}"
+
+- name: Make sure the required direcotries exist
+  file:
+    path: "{{ client_root }}"
+    state: directory
+
+- name: Templating the addclient.sh script and config template to the server
+  template:
+    src: "opt/ovpn/clients/{{ item }}"
+    dest: "{{ client_root }}/{{ item }}"
+    mode: '0755'
+  loop:
+    - "addclient.sh"
+    - "template.ovpn"
+
+- name: Running the script and capturing output
+  shell:
+    cmd: "./addclient.sh"
+    chdir: "{{ client_root }}"
+  register: script_output
+
+- name: Fetching the client config file from the server
+  fetch:
+    src: "{{ script_output.stdout_lines[1] }}"
+    dest: "{{ output_conf_dir }}/{{ script_output.stdout_lines[1] | basename }}"
+    flat: yes
+
+- name: Remove the client config file from the server
+  file:
+    path: "{{ script_output.stdout_lines[1] }}"
+    state: absent
+
+- name: Pass for {{ script_output.stdout_lines[1] | basename }}
+  debug:
+    msg: "client pass: {{ script_output.stdout_lines[0] }}"
+

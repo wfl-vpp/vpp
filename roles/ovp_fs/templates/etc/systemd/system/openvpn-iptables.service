@@ -1,0 +1,14 @@
+[Unit]
+Description=Iptables rules service for OpenVPN
+
+[Service]
+Type=oneshot
+User=root
+ExecStart={{ iptables_path }} -t nat -I POSTROUTING -s 10.200.0.0/24 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+ExecStart={{ iptables_path }} -t nat -I POSTROUTING -s 10.20.30.0/24 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+ExecStop={{ iptables_path }} -t nat -D POSTROUTING -s 10.200.0.0/24 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+ExecStop={{ iptables_path }} -t nat -D POSTROUTING -s 10.20.30.0/24 -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

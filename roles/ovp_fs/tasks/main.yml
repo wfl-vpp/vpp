@@ -1,0 +1,28 @@
+---
+- name: Ubuntu 22.04 Foreign side
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '22.04'
+  block:
+    - name: Setting up OpenVPN on Foreign Server
+      when: remove_ovpn|bool == false
+      block:
+        - name: Setting up the main server on Foreign side
+          import_tasks: "ubuntu_22.04/setup_ovpn_server.yml"
+          tags:
+            - setup_foreign_server
+            - setup_foreign
+      tags:
+        - setup_foreign_side
+
+    - name: Removing OpenVPN from Foreign Server
+      when: remove_ovpn|bool == true
+      block:
+        - name: Removing the main server from Foreign side
+          import_tasks: "ubuntu_22.04/remove_ovpn_server.yml"
+          tags:
+            - remove_foreign_server
+            - remove_foreign
+
+      tags:
+        - remove_foreign_side

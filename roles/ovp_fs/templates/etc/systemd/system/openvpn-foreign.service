@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenVPN Service - Foreign server side
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory={{ ovpn_root }}
+ExecStart=/usr/sbin/openvpn --dev tun --verb {{ verbosity }} --secret {{ secret_path }} --ifconfig 10.200.0.1 10.200.0.2 --proto {{ ovpn_FS_server_proto }} --port {{ fs_server_port }} --auth none --log-append {{ fs_logpath }} --daemon
+ExecStartPost=sleep 5
+ExecStartPost={{ ip_bin_path }} route add 10.20.30.0/24 dev tun0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

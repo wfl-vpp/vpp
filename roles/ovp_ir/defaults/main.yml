@@ -1,0 +1,54 @@
+
+# Default variables for Ubuntu systems
+---
+#### Packages
+required_packages:
+  - zip
+  - haveged
+setup_apt_proxy: false
+
+remove_ovpn: false
+
+target_ssh_key : "keys/ubuntu_{{ inventory_hostname }}_ssh_key.pem"
+ansible_ssh_private_key_file : "{{ target_ssh_key }}"
+socks_proxy_port : "8080"
+socks_proxy_duration : 600  # Keep the socks proxy online for 10 minutes, so that target have enough time to fetch the packages
+openvpn_pkg_repo_host : "swupdate.openvpn.net"
+ip_bin_path: "/usr/sbin/ip"
+ovpn_root: "/opt/ovpn"
+ovpn_pki: "{{ ovpn_root }}/pki"
+
+# EasyRSA settings
+easyrsa_root: "/opt/easyrsa"
+easyrsa_pki: "{{ easyrsa_root }}/pki"
+easyrsa_src: "{{ easyrsa_root }}/src/easyrsa3"
+easyrsa_srv_k: "{{ ovpn_pki }}/.srvk"
+easyrsa_cert_country: "IR" 
+easyrsa_cert_province: "Tehran"
+easyrsa_cert_city: "Tehran"
+easyrsa_cert_org: "Free"
+easyrsa_cert_email: "free@freedom.org"
+easyrsa_cert_orgunit: "Women"
+easyrsa_cert_CN: "RSA-{{ lookup('password', '/dev/null length=4 chars=ascii_letters,digits') }}"
+easyrsa_randompass: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters,digits') }}"
+
+
+secret_path: "{{ ovpn_root }}/.secret"
+up_script: "{{ ovpn_root }}/up_script.sh"
+verbosity: 1
+ovpn_FS_server_proto: "tcp-server"
+ovpn_IS_server_proto: "tcp-server"
+ovpn_IS_client_proto: "tcp-client"
+fs_server_port: 443
+is_server_port: 443
+
+ping_client_interval: 10   # Ping the client every 10 sec.
+restart_if_noresp_x2: 60   # Restart the connection if no reply came from client after 2 * 60 sec.
+
+ic_logpath: "/var/log/openvpn-client.log"  # log path for client part on iran server
+is_logpath: "/var/log/openvpn-server.log"  # log path for server part on iran server
+fs_logpath: "/var/log/openvpn.log"  # log path for server part on foreign server
+
+# Ubuntu specific settings
+openvpn_ubuntu_repo_addr: "http://swupdate.openvpn.net/community/openvpn3/repos"
+openvpn_ubuntu_package_name: "openvpn"

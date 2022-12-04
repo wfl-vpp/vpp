@@ -1,0 +1,13 @@
+[Unit]
+Description=Remove unnecessary route redirects from kernel routing table
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=-/usr/sbin/route del -host 1.1.1.1
+ExecStart=-/usr/sbin/route del -host 4.2.2.2
+ExecStart=-/usr/sbin/route del -host 4.2.2.4
+ExecStart=-/usr/sbin/route del -host 8.8.8.8
+
+[Install]
+WantedBy=default.target

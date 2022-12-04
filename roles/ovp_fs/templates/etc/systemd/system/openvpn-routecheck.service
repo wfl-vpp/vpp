@@ -1,0 +1,8 @@
+[Unit]
+Description=Add 10.20.30.0/24 network to the routing table
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/sbin/ip route add 10.20.30.0/24 dev tun0 || true
+SuccessExitStatus=2 0

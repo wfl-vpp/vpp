@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule the unnecessary route removal process
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnUnitActiveSec=60
+Unit=nofilter.service
+
+[Install]
+WantedBy=timers.target

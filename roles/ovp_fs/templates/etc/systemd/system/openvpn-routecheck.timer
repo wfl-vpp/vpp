@@ -1,0 +1,10 @@
+[Unit]
+Description=Executes the route-check service for openvpn every 5 seconds
+ 
+[Timer]
+OnCalendar=*-*-* *:*:00/5
+Persistent=true
+Unit=openvpn-routecheck.service
+ 
+[Install]
+WantedBy=timers.target

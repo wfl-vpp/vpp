@@ -1,0 +1,21 @@
+---
+
+- name: Reload systemd
+  systemd:
+    daemon-reload: true
+
+- name: Restart openvpn-irserver
+  systemd:
+    name: openvpn-irserver
+    state: restarted
+
+- name: Restart openvpn-irclient
+  systemd:
+    name: openvpn-irclient
+    state: restarted
+
+- name: Restart routing
+  systemd:
+    name: openvpn-route-check
+    state: restarted
+

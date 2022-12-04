@@ -1,0 +1,10 @@
+/var/log/openvpn*.log {
+        daily
+        rotate 4
+        compress
+        delaycompress
+        nomail
+        missingok
+        shred
+        create 644 root root
+}

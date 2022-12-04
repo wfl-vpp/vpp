@@ -1,0 +1,12 @@
+[Unit]
+Description=OpenVPN Service - Iran server service
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory={{ ovpn_root }}
+ExecStart=/usr/sbin/openvpn --config {{ ovpn_root }}/ovpn-irserver.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

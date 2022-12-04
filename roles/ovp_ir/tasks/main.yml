@@ -1,0 +1,52 @@
+---
+- name: Ubuntu 22.04 IR side
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '22.04'
+  block:
+    - name: Setting up OpenVPN on IR Server
+      when: remove_ovpn|bool == false
+      block:
+        - name: Setting up the filtering bypass routes
+          import_tasks: "ubuntu_22.04/setup_rmfilter.yml"
+          tags:
+            - setup_rmfilter
+            - setup_ir
+      
+        - name: Continuing with IR client side setup
+          import_tasks: "ubuntu_22.04/setup_ovpn_client.yml"
+          tags:
+            - setup_irclient
+            - setup_ir
+    
+        - name: Continuing with IR Server side setup
+          import_tasks: "ubuntu_22.04/setup_ovpn_server.yml"
+          tags:
+            - setup_irserver
+            - setup_ir
+      tags:
+        - setup_ir_side
+
+    - name: Removing OpenVPN from IR Server
+      when: remove_ovpn|bool == true
+      block:
+        - name: Setting up the filtering bypass routes
+          import_tasks: "ubuntu_22.04/remove_rmfilter.yml"
+          tags:
+            - remove_rmfilter
+            - remove_ir
+      
+        - name: Continuing with IR client side setup
+          import_tasks: "ubuntu_22.04/remove_ovpn_client.yml"
+          tags:
+            - remove_irclient
+            - remove_ir
+    
+        - name: Continuing with IR Server side setup
+          import_tasks: "ubuntu_22.04/remove_ovpn_server.yml"
+          tags:
+            - remove_irserver
+            - remove_ir
+      tags:
+        - remove_ir_side
+  

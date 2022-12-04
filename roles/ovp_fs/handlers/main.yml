@@ -1,0 +1,20 @@
+---
+
+- name: Reload systemd
+  systemd:
+    daemon-reload: true
+
+- name: Restart openvpn-foreign
+  systemd:
+    name: openvpn-foreign
+    state: restarted
+
+- name: Restart routing
+  systemd:
+    name: openvpn-route-check
+    state: restarted
+
+- name: Restart openvpn-iptables
+  systemd:
+    name: openvpn-iptables
+    state: restarted

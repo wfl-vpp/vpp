@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule the ovpn route check service
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnUnitActiveSec=60
+Unit=openvpn-route-check.service
+
+[Install]
+WantedBy=timers.target
