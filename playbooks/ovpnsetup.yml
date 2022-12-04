@@ -1,0 +1,10 @@
+---
+- hosts: foreign_servers
+  roles:
+   - role: roles/ovp_fs
+
+- hosts: iran_servers
+  roles:
+   - role: roles/ovp_ir
+
+
