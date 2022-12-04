@@ -1,0 +1,20 @@
+---
+all:
+  hosts:
+  children:
+    iran_servers:
+      hosts:
+        X.X.X.X:
+          peer: "Y.Y.Y.Y"
+        W.W.W.W:
+          peer: "Z.Z.Z.Z"
+      vars:
+        country: "Iran"
+    foreign_servers:
+      hosts:
+        Y.Y.Y.Y:
+          peer: "X.X.X.X"
+        Z.Z.Z.Z:
+          peer: "W.W.W.W"
+      vars:
+        country: "Foreign"
