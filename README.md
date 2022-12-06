@@ -91,6 +91,26 @@ and you should put it inside the key directory.
 # Possible Challenges
 If users try to access websites which are banned according to the regulations of the target country (the country where Server A is located), then the owner of the Server A will have to face the consequences (e.g. banning of their account, ...)
 
+## How to run the playbooks
+### Setting up the servers
+After providing the keys and adding the hosts into the inventory, run the following command:
+```
+ansible-playbook -i inventory.yml playbooks/ovpnsetup.yml -l X.X.X.X,Y.Y.Y.Y
+```
+Not that how we limitted the execution of the playbook to the specified servers, and not all the servers listed in the inventory.
+
+This will take some time, and then all the A-B server pairs listed in the inventory should be ready to server independently.
+
+### Adding some clients
+To add clients, simply run the addclient playbook:
+```
+ansible-playbook -i inventory.yml playbooks/client_add.yml -l "Y.Y.Y.Y" --tags addclient
+```
+Note that how we limitted the execution of the playbook to the mentioned server (this is the B server, e.g. the one located in Iran).
+
+After that, in the control host (the host which you ran the ansible-playbook command on), there will be a folder containing the config file for the recently added client.
+Please not that all the client config files will ask for a password at some point, after running the addclient playbook, the password will be printed out on the screen in a debug message at the end of the playbook execution.
+
 # Limitations
 As of now, only Ubuntu 22.0.4 systems are supported. Others may work, but not tested.
 
