@@ -9,7 +9,7 @@ setup_apt_proxy: false
 
 remove_ovpn: false
 
-target_ssh_key : "keys/{{ ansible_distribution }}_{{ inventory_hostname }}_ssh_key.pem"
+target_ssh_key : "keys/ubuntu_{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file : "{{ target_ssh_key }}"
 socks_proxy_port : "8080"
 socks_proxy_duration : 600  # Keep the socks proxy online for 10 minutes, so that target have enough time to fetch the packages
