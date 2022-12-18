@@ -19,22 +19,31 @@
 
 - name: Running the script and capturing output
   shell:
-    cmd: "./addclient.sh"
+    cmd: "./addclient.sh {{ num_of_cli }}"
     chdir: "{{ client_root }}"
   register: script_output
 
-- name: Fetching the client config file from the server
+- name: Set a list of client config files ans passwords
+  set_fact:
+    cli_conf_list: "{{ script_output.stdout_lines[1].split(',') }}"
+    cli_pass_list: "{{ script_output.stdout_lines[0].split(',') }}"
+
+- name: Fetching the client config files from the server
   fetch:
-    src: "{{ script_output.stdout_lines[1] }}"
-    dest: "{{ output_conf_dir }}/{{ script_output.stdout_lines[1] | basename }}"
+    src: "{{ item }}"
+    dest: "{{ output_conf_dir }}/{{ item | basename }}"
     flat: yes
+  loop: "{{ cli_conf_list }}"
 
-- name: Remove the client config file from the server
+- name: Removing the client config files from the server
   file:
-    path: "{{ script_output.stdout_lines[1] }}"
+    path: "{{ item }}"
     state: absent
+  loop: "{{ cli_conf_list }}"
 
-- name: Pass for {{ script_output.stdout_lines[1] | basename }}
+- name: Printing config file names and associated passwords
   debug:
-    msg: "client pass: {{ script_output.stdout_lines[0] }}"
-
+    msg: "Config: {{ item | basename }}, Pass: {{ cli_pass_list[idx] }}" 
+  loop: "{{ cli_conf_list }}"
+  loop_control:
+    index_var: idx
