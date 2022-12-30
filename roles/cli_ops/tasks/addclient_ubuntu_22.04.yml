@@ -8,6 +8,44 @@
     path: "{{ client_root }}"
     state: directory
 
+- name: Setting up debconf for postfix installation - sender address
+  debconf:
+    name: postfix
+    question: postfix/mailname
+    vtype: string
+    value: "{{ postfix_mailname }}"
+
+- name: Setting up debconf for postfix installation - server type
+  debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    vtype: string
+    value: "{{ postfix_mailer_type }}"
+
+- name: Installing mailutils
+  apt:
+    name: mailutils
+    state: present
+    update_cache: true
+    
+- name: Making sure Postfix only listens locally
+  lineinfile:
+    path: "{{ postfix_main_cf }}"
+    regexp: "^inet_interfaces"
+    line: "inet_interfaces = 127.0.0.1"
+
+- name: Making sure Postfix only works with ipv4
+  lineinfile:
+    path: "{{ postfix_main_cf}}"
+    regexp: "^inet_protocols"
+    line: "inet_protocols = ipv4"
+
+- name: Restart Postfix
+  systemd:
+    name: postfix
+    state: restarted
+    daemon_reload: true
+
 - name: Templating the addclient.sh script and config template to the server
   template:
     src: "opt/ovpn/clients/{{ item }}"
@@ -17,24 +55,62 @@
     - "addclient.sh"
     - "template.ovpn"
 
+- name: Updating num_of_cli based on email list and creating the mailing_list
+  when: emails != ""
+  block:
+   - name: Creating list
+     set_fact:
+       mailing_list: "{{ emails.split(',') }}"
+
+   - name: Updating num_of_cli
+     set_fact:
+       num_of_cli: "{{ mailing_list | length }}"
+
 - name: Running the script and capturing output
   shell:
-    cmd: "./addclient.sh"
+    cmd: "./addclient.sh {{ num_of_cli }}"
     chdir: "{{ client_root }}"
   register: script_output
 
-- name: Fetching the client config file from the server
+- name: Creating a list of client config files ans passwords
+  set_fact:
+    cli_conf_list: "{{ script_output.stdout_lines[1].split(',') }}"
+    cli_pass_list: "{{ script_output.stdout_lines[0].split(',') }}"
+
+- name: Sending emails to clients attaching files
+  when: emails != ""
+  block:
+    - name: Sending mails
+      mail:
+        host: localhost
+        port: 25
+        from: "{{ postfix_mailname }}"
+        to: "{{ item }}"
+        subject: "{{ mail_subject }}"
+        body: "Please double check the server's ip address in the config file and only connect to the trusted servers.\nPassword: {{ cli_pass_list[idx1] }}"
+        attach: "{{ cli_conf_list[idx1] }}"
+      loop: "{{ mailing_list }}"
+      loop_control:
+        index_var: idx1
+
+- name: Fetching the client config files from the server
   fetch:
-    src: "{{ script_output.stdout_lines[1] }}"
-    dest: "{{ output_conf_dir }}/{{ script_output.stdout_lines[1] | basename }}"
+    src: "{{ item }}"
+    dest: "{{ output_conf_dir }}/{{ item | basename }}"
     flat: yes
+  loop: "{{ cli_conf_list }}"
+  when: emails == ""
 
-- name: Remove the client config file from the server
+- name: Removing the client config files from the server
   file:
-    path: "{{ script_output.stdout_lines[1] }}"
+    path: "{{ item }}"
     state: absent
+  loop: "{{ cli_conf_list }}"
 
-- name: Pass for {{ script_output.stdout_lines[1] | basename }}
+- name: Printing config file names and associated passwords
   debug:
-    msg: "client pass: {{ script_output.stdout_lines[0] }}"
-
+    msg: "Config: {{ item | basename }}, Pass: {{ cli_pass_list[idx2] }}" 
+  loop: "{{ cli_conf_list }}"
+  loop_control:
+    index_var: idx2
+  when: emails == ""
