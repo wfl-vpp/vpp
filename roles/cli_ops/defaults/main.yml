@@ -1,13 +1,20 @@
 # Default variables for Ubuntu systems
 ---
 output_conf_dir: "/tmp/configs/"
+num_of_cli: 1 # Default number of clients to add
 
-target_ssh_key: "keys/ubuntu_{{ inventory_hostname }}_ssh_key.pem"
+target_ssh_key: "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file: "{{ target_ssh_key }}"
 ovpn_root: "/opt/ovpn"
 ovpn_pki: "{{ ovpn_root }}/pki"
 
 client_root: "{{ ovpn_root }}/clients"
+
+postfix_main_cf: "/etc/postfix/main.cf"
+postfix_mailname: "WFL-VPN-Server"
+postfix_mailer_type: "Internet Site"
+mail_subject: "WFL-VPN config file"
+emails: ""
 
 # EasyRSA settings
 easyrsa_root: "/opt/easyrsa"
