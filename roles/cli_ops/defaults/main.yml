@@ -8,6 +8,8 @@ ansible_ssh_private_key_file: "{{ target_ssh_key }}"
 ovpn_root: "/opt/ovpn"
 ovpn_pki: "{{ ovpn_root }}/pki"
 
+ovpn_client_dns_server: "4.2.2.4"
+
 client_root: "{{ ovpn_root }}/clients"
 
 postfix_main_cf: "/etc/postfix/main.cf"
