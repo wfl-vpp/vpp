@@ -1,6 +1,6 @@
 # Default variables for Ubuntu systems
 ---
-output_conf_dir: "/tmp/configs/"
+output_conf_dir: "/root/configs/"
 num_of_cli: 1 # Default number of clients to add
 
 target_ssh_key: "keys/{{ inventory_hostname }}_ssh_key.pem"

@@ -79,12 +79,12 @@ As you can see in the above example, there is a server in Iran (X.X.X.X) who is 
 
 ### Add ssh private keys to the key directory
 To add the private keys to the "key" directory, you should name them correctly. The naming convension is quite simple.
-Just add the target OS (as set in {{ ansible_distribution }} variable, case sensitive (e.g. Ubuntu, not ubuntu) to the beginning of the file name, then add the IP address of the host, and finally add _ssh_key.pem to the end.
+Just add the target OS distribution to the beginning of the file name, then add the IP address of the host, and finally add _ssh_key.pem to the end.
 This way ansible will be able to connect to those servers and do the setup.
 Please note that keys should have root access to the host for now.
 So, if a host is accessible via IP address 1.2.3.4 and its OS is ubuntu, the key should be named:
 ```
-Ubuntu_1.2.3.4_ssh_key.pem
+ubuntu_1.2.3.4_ssh_key.pem
 ```
 and you should put it inside the key directory.
 
