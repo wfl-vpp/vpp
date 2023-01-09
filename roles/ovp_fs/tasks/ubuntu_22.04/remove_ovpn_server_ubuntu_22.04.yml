@@ -1,0 +1,57 @@
+---
+- name: Removing openvpn from ubuntu server
+  debug:
+    msg: "Removing OpenVPN from ubuntu: {{ inventory_hostname }}"
+
+- name: Making sure the default service is disabled and stopped
+  ignore_errors: true
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - openvpn
+    - openvpn-iptables
+    - openvpn-foreign
+    - openvpn-routecheck.service
+    - openvpn-routecheck.timer
+
+- name: Removing the systemd files
+  file:
+    path: "/etc/systemd/system/{{ item }}"
+    state: absent
+  loop:
+    - "openvpn-foreign.service"
+    - "openvpn-iptables.service"
+    - "openvpn-routecheck.service"
+    - "openvpn-routecheck.timer"
+  notify: Reload systemd
+
+- name: Disabling ip_forward in sysctl and /proc
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '0'
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: Removing logrotate config
+  file:
+    path: "/etc/logrotate.d/ovpn"
+    state: absent
+
+- name: Removing the log files
+  file:
+    path: "{{ fs_logpath }}"
+
+- name: Removing the main directory and the secret
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ secret_path }}"
+    - "{{ ovpn_root }}"
+
+- name: Reloading systemd
+  systemd:
+    daemon-reload: true
