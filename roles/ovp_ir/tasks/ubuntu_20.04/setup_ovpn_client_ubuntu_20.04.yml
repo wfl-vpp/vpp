@@ -3,6 +3,11 @@
   debug:
     msg: "Installing OpenVPN on {{ inventory_hostname }}"
 
+- name: Disabling and removing auto update
+  apt:
+    name: unattended-upgrades
+    state: absent
+
 - name: Update apt
   apt:
     update_cache: true
