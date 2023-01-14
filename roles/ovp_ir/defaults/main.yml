@@ -3,6 +3,7 @@
 ---
 #### Packages
 required_packages:
+  - unzip
   - zip
   - haveged
   - debconf
