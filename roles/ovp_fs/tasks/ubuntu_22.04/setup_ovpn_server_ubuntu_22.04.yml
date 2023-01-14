@@ -8,6 +8,12 @@
     path: "{{ ovpn_root }}"
     state: directory
 
+- name: Disabling and removing auto-update
+  apt:
+    name: "unattended-upgrades"
+    state: absent
+    update_cache: true
+
 - name: Installing openvpn on the host
   ansible.builtin.apt:
     name: "{{ openvpn_ubuntu_package_name }}"
