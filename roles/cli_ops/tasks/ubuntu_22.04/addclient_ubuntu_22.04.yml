@@ -8,44 +8,47 @@
     path: "{{ client_root }}"
     state: directory
 
-- name: Setting up debconf for postfix installation - sender address
-  debconf:
-    name: postfix
-    question: postfix/mailname
-    vtype: string
-    value: "{{ postfix_mailname }}"
-
-- name: Setting up debconf for postfix installation - server type
-  debconf:
-    name: postfix
-    question: postfix/main_mailer_type
-    vtype: string
-    value: "{{ postfix_mailer_type }}"
-
-- name: Installing mailutils
-  apt:
-    name: mailutils
-    state: present
-    update_cache: true
+- name: Email configs
+  when: emails != ""
+  block:
+    - name: Setting up debconf for postfix installation - sender address
+      debconf:
+        name: postfix
+        question: postfix/mailname
+        vtype: string
+        value: "{{ postfix_mailname }}"
     
-- name: Making sure Postfix only listens locally
-  lineinfile:
-    path: "{{ postfix_main_cf }}"
-    regexp: "^inet_interfaces"
-    line: "inet_interfaces = 127.0.0.1"
-
-- name: Making sure Postfix only works with ipv4
-  lineinfile:
-    path: "{{ postfix_main_cf}}"
-    regexp: "^inet_protocols"
-    line: "inet_protocols = ipv4"
-
-- name: Restart Postfix
-  systemd:
-    name: postfix
-    state: restarted
-    daemon_reload: true
-
+    - name: Setting up debconf for postfix installation - server type
+      debconf:
+        name: postfix
+        question: postfix/main_mailer_type
+        vtype: string
+        value: "{{ postfix_mailer_type }}"
+    
+    - name: Installing mailutils
+      apt:
+        name: mailutils
+        state: present
+        update_cache: true
+        
+    - name: Making sure Postfix only listens locally
+      lineinfile:
+        path: "{{ postfix_main_cf }}"
+        regexp: "^inet_interfaces"
+        line: "inet_interfaces = 127.0.0.1"
+    
+    - name: Making sure Postfix only works with ipv4
+      lineinfile:
+        path: "{{ postfix_main_cf}}"
+        regexp: "^inet_protocols"
+        line: "inet_protocols = ipv4"
+    
+    - name: Restart Postfix
+      systemd:
+        name: postfix
+        state: restarted
+        daemon_reload: true
+    
 - name: Templating the addclient.sh script and config template to the server
   template:
     src: "opt/ovpn/clients/{{ item }}"
