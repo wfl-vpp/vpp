@@ -8,7 +8,13 @@
     path: "{{ ovpn_root }}"
     state: directory
 
-- name: Installing openvpn on the host
+- name: Disabling and removing the apt auto-update
+  apt:
+    name: unattended-upgrades
+    state: absent
+    update_cache: true
+
+- name: Installing openvpn package on the host
   ansible.builtin.apt:
     name: "{{ openvpn_ubuntu_package_name }}"
     state: latest
@@ -26,7 +32,7 @@
     - openvpn-foreign
 
 - name: Generating Secret
-  command: /usr/sbin/openvpn --genkey secret {{ secret_path }}
+  command: /usr/sbin/openvpn --genkey --secret {{ secret_path }}
 
 - name: Get the secret from foreign server
   fetch:
