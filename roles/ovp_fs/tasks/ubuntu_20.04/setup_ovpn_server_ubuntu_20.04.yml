@@ -1,99 +1,105 @@
 ---
-- name: Setup openvpn on ubuntu server
-  debug:
-    msg: "OpenVPN on ubuntu: {{ inventory_hostname }}"
-
-- name: Creating the target working directory
-  file:
-    path: "{{ ovpn_root }}"
-    state: directory
-
-- name: Disabling and removing the apt auto-update
-  apt:
-    name: unattended-upgrades
-    state: absent
-    update_cache: true
-
-- name: Installing openvpn package on the host
-  ansible.builtin.apt:
-    name: "{{ openvpn_ubuntu_package_name }}"
-    state: latest
-    update_cache: yes
-
-- name: Make sure the default service is disabled and stopped
-  ignore_errors: yes
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-    enabled: false
-  loop:
-    - openvpn
-    - openvpn-iptables
-    - openvpn-foreign
-
-- name: Generating Secret
-  command: /usr/sbin/openvpn --genkey --secret {{ secret_path }}
-
-- name: Get the secret from foreign server
-  fetch:
-    src: "{{ secret_path }}"
-    dest: "/tmp/.secret_{{ inventory_hostname }}"
-    flat: yes
-
-- name: Template systemd service file
-  template:
-    src: "etc/systemd/system/openvpn-foreign.service"
-    dest: "/etc/systemd/system/openvpn-foreign.service"
-
-- name: Enabling ip_forward in sysctl and /proc
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: '1'
-    sysctl_set: yes
-    state: present
-    reload: yes
-
-- name: Template the iptables rules service file
-  template:
-    src: "etc/systemd/system/openvpn-iptables.service"
-    dest: "/etc/systemd/system/openvpn-iptables.service"
-
-- name: Enable and start OpenVPN iptables service
-  systemd:
-    name: "openvpn-iptables"
-    state: started
-    enabled: yes
-
-- name: Systemd daemon-reload
-  systemd:
-    daemon_reload: yes
-
-- name: Enable and start openvpn-foreign service
-  systemd:
-    name: openvpn-foreign
-    state: started
-    enabled: yes
-
-- name: Template routecheck service files
-  template:
-    src: "etc/systemd/system/{{ item }}"
-    dest: "/etc/systemd/system/{{ item }}"
-  loop:
-    - "openvpn-routecheck.service"
-    - "openvpn-routecheck.timer"
-
-- name: Systemd daemon-reload
-  systemd:
-    daemon_reload: yes
-
-- name: Enable routecheck timer
-  systemd:
-    name: openvpn-routecheck.timer
-    state: started
-    enabled: yes
-
-- name: Template logrotate config
-  template:
-    src: "etc/logrotate.d/ovpn"
-    dest: "/etc/logrotate.d/ovpn"
-
+- name: Setting up OpenVPN Server
+  tags:
+    - setup_foreign_server
+    - setup_foreign_side
+    - ubuntu_20_04
+  block:
+    - name: Setup openvpn on ubuntu server
+      debug:
+        msg: "OpenVPN on ubuntu: {{ inventory_hostname }}"
+    
+    - name: Creating the target working directory
+      file:
+        path: "{{ ovpn_root }}"
+        state: directory
+    
+    - name: Disabling and removing the apt auto-update
+      apt:
+        name: unattended-upgrades
+        state: absent
+        update_cache: true
+    
+    - name: Installing openvpn package on the host
+      ansible.builtin.apt:
+        name: "{{ openvpn_ubuntu_package_name }}"
+        state: latest
+        update_cache: yes
+    
+    - name: Make sure the default service is disabled and stopped
+      ignore_errors: yes
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - openvpn
+        - openvpn-iptables
+        - openvpn-foreign
+    
+    - name: Generating Secret
+      command: /usr/sbin/openvpn --genkey --secret {{ secret_path }}
+    
+    - name: Get the secret from foreign server
+      fetch:
+        src: "{{ secret_path }}"
+        dest: "/tmp/.secret_{{ inventory_hostname }}"
+        flat: yes
+    
+    - name: Template systemd service file
+      template:
+        src: "etc/systemd/system/openvpn-foreign.service"
+        dest: "/etc/systemd/system/openvpn-foreign.service"
+    
+    - name: Enabling ip_forward in sysctl and /proc
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+    
+    - name: Template the iptables rules service file
+      template:
+        src: "etc/systemd/system/openvpn-iptables.service"
+        dest: "/etc/systemd/system/openvpn-iptables.service"
+    
+    - name: Enable and start OpenVPN iptables service
+      systemd:
+        name: "openvpn-iptables"
+        state: started
+        enabled: yes
+    
+    - name: Systemd daemon-reload
+      systemd:
+        daemon_reload: yes
+    
+    - name: Enable and start openvpn-foreign service
+      systemd:
+        name: openvpn-foreign
+        state: started
+        enabled: yes
+    
+    - name: Template routecheck service files
+      template:
+        src: "etc/systemd/system/{{ item }}"
+        dest: "/etc/systemd/system/{{ item }}"
+      loop:
+        - "openvpn-routecheck.service"
+        - "openvpn-routecheck.timer"
+    
+    - name: Systemd daemon-reload
+      systemd:
+        daemon_reload: yes
+    
+    - name: Enable routecheck timer
+      systemd:
+        name: openvpn-routecheck.timer
+        state: started
+        enabled: yes
+    
+    - name: Template logrotate config
+      template:
+        src: "etc/logrotate.d/ovpn"
+        dest: "/etc/logrotate.d/ovpn"
+    

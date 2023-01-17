@@ -1,4 +1,10 @@
 ---
-- name: fail
-  fail:
-    msg: "Not here!"
+- name: Removing a Client
+  tags:
+    - rmclient
+    - ir
+    - ubuntu_20_04
+  block:
+    - name: fail
+      fail:
+        msg: "Not here!"

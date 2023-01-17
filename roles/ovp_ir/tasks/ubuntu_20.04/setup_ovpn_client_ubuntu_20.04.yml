@@ -1,109 +1,115 @@
 ---
-- name: Setup openvpn on ubuntu server
-  debug:
-    msg: "Installing OpenVPN on {{ inventory_hostname }}"
-
-- name: Disabling and removing auto update
-  apt:
-    name: unattended-upgrades
-    state: absent
-
-- name: Update apt
-  apt:
-    update_cache: true
-
-- name: Installing the required packages
-  apt:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ required_packages }}"
-
-- name: Creating the target working directory
-  file:
-    path: "{{ ovpn_root }}"
-    state: directory
-
-- name: Running the whole proxy setup for openvpn apt repo
-  when: setup_apt_proxy|bool == true
+- name: Setting up OpenVPN client setup
+  tags:
+    - setup_irclient
+    - setup_ir_side
+    - ubuntu_20_04
   block:
-    - name: Running on the local host
-      delegate_to: 127.0.0.1
-      block:
-      - name: Templating the script locally
-        template:
-          src: "tmp/ssh_socks_openvpn.sh"
-          dest: "/tmp/ssh_socks_openvpn.sh"
-          mode: '0755'
-      
-      - name: Run proxy script
-        shell: "/tmp/ssh_socks_openvpn.sh"
-        register: command_stat
-      
-      - name: Removing the local proxy script
-        file:
-          path: "/tmp/ssh_socks_openvpn.sh"
-          state: absent
+    - name: Setup openvpn on ubuntu server
+      debug:
+        msg: "Installing OpenVPN on {{ inventory_hostname }}"
     
-    - name: Copy apt config to the host
-      template:
-        src: "etc/apt/apt.conf.d/80proxy.conf"
-        dest: "/etc/apt/apt.conf.d/80proxy.conf"
+    - name: Disabling and removing auto update
+      apt:
+        name: unattended-upgrades
+        state: absent
     
-    - name: Adding openvpn http repo to the host and updating cache
-      apt_repository:
-        repo: "deb [trusted=yes] {{ openvpn_ubuntu_repo_addr }} {{ ansible_distribution_release }} main"
+    - name: Update apt
+      apt:
+        update_cache: true
+    
+    - name: Installing the required packages
+      apt:
+        name: "{{ item }}"
         state: present
-        filename: openvpn
+      loop: "{{ required_packages }}"
+    
+    - name: Creating the target working directory
+      file:
+        path: "{{ ovpn_root }}"
+        state: directory
+    
+    - name: Running the whole proxy setup for openvpn apt repo
+      when: setup_apt_proxy|bool == true
+      block:
+        - name: Running on the local host
+          delegate_to: 127.0.0.1
+          block:
+          - name: Templating the script locally
+            template:
+              src: "tmp/ssh_socks_openvpn.sh"
+              dest: "/tmp/ssh_socks_openvpn.sh"
+              mode: '0755'
+          
+          - name: Run proxy script
+            shell: "/tmp/ssh_socks_openvpn.sh"
+            register: command_stat
+          
+          - name: Removing the local proxy script
+            file:
+              path: "/tmp/ssh_socks_openvpn.sh"
+              state: absent
+        
+        - name: Copy apt config to the host
+          template:
+            src: "etc/apt/apt.conf.d/80proxy.conf"
+            dest: "/etc/apt/apt.conf.d/80proxy.conf"
+        
+        - name: Adding openvpn http repo to the host and updating cache
+          apt_repository:
+            repo: "deb [trusted=yes] {{ openvpn_ubuntu_repo_addr }} {{ ansible_distribution_release }} main"
+            state: present
+            filename: openvpn
+            update_cache: yes
+        
+    - name: Installing openvpn on the host
+      apt:
+        name: "{{ openvpn_ubuntu_package_name }}"
+        state: latest
         update_cache: yes
     
-- name: Installing openvpn on the host
-  apt:
-    name: "{{ openvpn_ubuntu_package_name }}"
-    state: latest
-    update_cache: yes
-
-- name: Make sure the default service is disabled and stopped
-  ignore_errors: yes
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-    enabled: false
-  loop:
-    - openvpn
-    - openvpn-irclient
-
-- name: Copy secret file to Iran server {{ inventory_hostname }}
-  copy:
-    src: /tmp/.secret_{{ peer | ipaddr('address') }}
-    dest: "{{ secret_path }}"
-    mode: '0400'
-    force: yes
-
-- name: Template Openvpn-client service
-  template:
-    src: "etc/systemd/system/openvpn-irclient.service"
-    dest: "/etc/systemd/system/openvpn-irclient.service"
-
-- name: Systemd daemon reload
-  systemd:
-    daemon-reload: yes
-
-- name: Enabling ip_forward in sysctl and proc
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: '1'
-    sysctl_set: yes
-    state: present
-    reload: yes
-
-- name: Start the client service on iran server
-  systemd:
-    name: openvpn-irclient
-    state: started
-    enabled: yes
-
-- name: Remove local secret file
-  delegate_to: 127.0.0.1
-  file:
-    path: /tmp/.secret_{{ peer | ipaddr('address') }}
-    state: absent
+    - name: Make sure the default service is disabled and stopped
+      ignore_errors: yes
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - openvpn
+        - openvpn-irclient
+    
+    - name: Copy secret file to Iran server {{ inventory_hostname }}
+      copy:
+        src: /tmp/.secret_{{ peer | ipaddr('address') }}
+        dest: "{{ secret_path }}"
+        mode: '0400'
+        force: yes
+    
+    - name: Template Openvpn-client service
+      template:
+        src: "etc/systemd/system/openvpn-irclient.service"
+        dest: "/etc/systemd/system/openvpn-irclient.service"
+    
+    - name: Systemd daemon reload
+      systemd:
+        daemon-reload: yes
+    
+    - name: Enabling ip_forward in sysctl and proc
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+    
+    - name: Start the client service on iran server
+      systemd:
+        name: openvpn-irclient
+        state: started
+        enabled: yes
+    
+    - name: Remove local secret file
+      delegate_to: 127.0.0.1
+      file:
+        path: /tmp/.secret_{{ peer | ipaddr('address') }}
+        state: absent

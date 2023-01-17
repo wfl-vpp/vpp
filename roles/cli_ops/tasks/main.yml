@@ -6,13 +6,13 @@
   block:
     - name: Removing a client
       when: operation == "remove"
-      import_tasks: "ubuntu_22.04/rmclient_ubuntu_22.04.yml"
+      include_tasks: "ubuntu_22.04/rmclient_ubuntu_22.04.yml"
       tags:
         - rmclient
         - ir
     - name: Adding a client
       when: operation == "add"
-      import_tasks: "ubuntu_22.04/addclient_ubuntu_22.04.yml"
+      include_tasks: "ubuntu_22.04/addclient_ubuntu_22.04.yml"
       tags:
         - addclient
         - ir
@@ -24,13 +24,13 @@
   block:
     - name: Removing a client
       when: operation == "remove"
-      import_tasks: "ubuntu_20.04/rmclient_ubuntu_20.04.yml"
+      include_tasks: "ubuntu_20.04/rmclient_ubuntu_20.04.yml"
       tags:
         - rmclient
         - ir
     - name: Adding a client
       when: operation == "add"
-      import_tasks: "ubuntu_20.04/addclient_ubuntu_20.04.yml"
+      include_tasks: "ubuntu_20.04/addclient_ubuntu_20.04.yml"
       tags:
         - addclient
         - ir

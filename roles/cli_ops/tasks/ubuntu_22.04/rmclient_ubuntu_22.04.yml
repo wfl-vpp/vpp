@@ -1,5 +1,11 @@
 ---
-- name: fail
-  fail:
-    msg: "Not here!"
-
+- name: Removing clients
+  tags:
+    - rmclient
+    - ir
+    - ubuntu_22_04
+  block:
+    - name: fail
+      fail:
+        msg: "Not here!"
+    
