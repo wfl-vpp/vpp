@@ -66,8 +66,8 @@ add_the_client()
 	# For ansible to get the file path
 	CLICONF_LIST+=${CLICONF},
 	
-	# Remove client key and cert files from the server
-	rm -f ${EASYPKI}/issued/cli_${RND1}.crt
+	# Remove client key file from the server
+	# rm -f ${EASYPKI}/issued/cli_${RND1}.crt
 	rm -f ${EASYPKI}/private/cli_${RND1}.key
 	
 	# Increase client counter by one
