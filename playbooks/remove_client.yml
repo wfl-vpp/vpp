@@ -1,0 +1,6 @@
+---
+- hosts: iran_servers
+  roles:
+   - role: roles/cli_ops
+     vars:
+       operation: "remove"

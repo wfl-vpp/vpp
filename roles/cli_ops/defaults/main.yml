@@ -3,6 +3,8 @@
 output_conf_dir: "/root/configs/"
 num_of_cli: 1 # Default number of clients to add
 
+client: ""
+
 target_ssh_key: "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file: "{{ target_ssh_key }}"
 ovpn_root: "/opt/ovpn"

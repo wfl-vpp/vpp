@@ -1,10 +1,32 @@
 ---
-- name: Removing a Client
+- name: Removing clients
   tags:
     - rmclient
     - ir
-    - ubuntu_20_04
+    - ubuntu_22_04
   block:
-    - name: fail
+    - name: Fail if no client is specified
       fail:
-        msg: "Not here!"
+        msg: "No client specified, please specify the client with -e client=cli_xxxx"
+      when: client == ""
+
+    - name: Check if the specified client certificate already exists on the server
+      stat:
+        path: "{{ easyrsa_pki }}/issued/{{ client.split('.') | first | basename }}.crt"
+      register: cli_file
+
+    - name: Fail if there is no client cert file on the server
+      fail:
+        msg: "No client file found on the server"
+      when: not cli_file.stat.exists
+
+    - name: Revoke the certificate
+      shell:
+        cmd: "{{ easyrsa_src }}/easyrsa --sbatch revoke {{ client.split('.') | first | basename }} unspecified"
+        chdir: "{{ easyrsa_pki }}"
+
+    - name: Re-generating the CRL
+      shell:
+        cmd: "{{ easyrsa_src }}/easyrsa gen-crl"
+        chdir: "{{ easyrsa_pki }}"
+
