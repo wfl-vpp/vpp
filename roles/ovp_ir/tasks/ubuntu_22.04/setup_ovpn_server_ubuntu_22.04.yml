@@ -152,4 +152,9 @@
       template:
         src: "etc/logrotate.d/ovpn"
         dest: "/etc/logrotate.d/ovpn"
-    
+
+    - name: Generating CRL file
+      shell:
+        cmd: "{{ easyrsa_src }}/easyrsa gen-crl"
+        chdir: "{{ easyrsa_pki }}"
+
