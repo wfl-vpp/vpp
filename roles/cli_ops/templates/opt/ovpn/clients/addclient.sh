@@ -8,6 +8,7 @@ CLIROOT="{{ client_root }}"
 CLILIST="${CLIROOT}/clientlist"
 CLICONF_LIST=""
 CLIPASS_LIST=""
+DO_ENC="{{ easyrsa_encrypt_cli_key }}"
 CLN=$1
 
 	
@@ -29,7 +30,13 @@ add_the_client()
 	
 	# Generate cert files for client
 	cd ${EASYSRC}
-	./easyrsa --pki-dir=${EASYPKI} --batch --passin=file:${EASYSERV_K} --passout=env:CLIPASS build-client-full cli_${RND1} &>/dev/null
+	if [[ ${DO_ENC} ]]
+	then
+		./easyrsa --pki-dir=${EASYPKI} --batch --passin=file:${EASYSERV_K} --passout=env:CLIPASS build-client-full cli_${RND1} &>/dev/null
+	else
+		./easyrsa --pki-dir=${EASYPKI} --batch --passin=file:${EASYSERV_K} build-client-full cli_${RND1} &>/dev/null
+	fi
+	
 	if [ $? -ne 0 ]
 	then
 		unset CLIPASS

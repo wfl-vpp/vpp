@@ -21,6 +21,7 @@ emails: ""
 # EasyRSA settings
 easyrsa_root: "/opt/easyrsa"
 easyrsa_pki: "{{ easyrsa_root }}/pki"
+easyrsa_encrypt_cli_key: true
 easyrsa_src: "{{ easyrsa_root }}/src/easyrsa3"
 easyrsa_srv_k: "{{ ovpn_pki }}/.srvk"
 easyrsa_cert_country: "IR" 
