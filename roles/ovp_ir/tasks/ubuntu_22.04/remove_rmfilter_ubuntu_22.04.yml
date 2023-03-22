@@ -4,6 +4,7 @@
     - remove_rmfilter
     - remove_ir_side
     - ubuntu_22_04
+  block:
     - name: Disabling nofilter service and timer
       systemd:
         name: "{{ item }}"

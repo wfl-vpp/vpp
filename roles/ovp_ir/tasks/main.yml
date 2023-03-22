@@ -28,17 +28,17 @@
     - name: Removing OpenVPN from IR Server
       when: remove_ovpn|bool == true
       block:
-        - name: Setting up the filtering bypass routes
+        - name: Removing the filtering bypass rules
           include_tasks: "ubuntu_22.04/remove_rmfilter_ubuntu_22.04.yml"
           tags:
             - remove_rmfilter
       
-        - name: Continuing with IR client side setup
+        - name: Removing the IR client side
           include_tasks: "ubuntu_22.04/remove_ovpn_client_ubuntu_22.04.yml"
           tags:
             - remove_irclient
     
-        - name: Continuing with IR Server side setup
+        - name: Remvoing the IR Server side
           include_tasks: "ubuntu_22.04/remove_ovpn_server_ubuntu_22.04.yml"
           tags:
             - remove_irserver
@@ -76,17 +76,17 @@
     - name: Removing OpenVPN from IR Server
       when: remove_ovpn|bool == true
       block:
-        - name: Setting up the filtering bypass routes
+        - name: Remvoing the filtering bypass routes
           include_tasks: "ubuntu_20.04/remove_rmfilter_ubuntu_20.04.yml"
           tags:
             - remove_rmfilter
       
-        - name: Continuing with IR client side setup
+        - name: Removing IR client side setup
           include_tasks: "ubuntu_20.04/remove_ovpn_client_ubuntu_20.04.yml"
           tags:
             - remove_irclient
     
-        - name: Continuing with IR Server side setup
+        - name: Removing IR Server side setup
           include_tasks: "ubuntu_20.04/remove_ovpn_server_ubuntu_20.04.yml"
           tags:
             - remove_irserver
