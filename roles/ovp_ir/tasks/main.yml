@@ -8,6 +8,8 @@
       when: remove_ovpn|bool == false
       block:
         - name: Setting up the filtering bypass routes
+          when:
+            - only_switch_fs|bool == false
           include_tasks: "ubuntu_22.04/setup_rmfilter_ubuntu_22.04.yml"
           tags:
             - setup_rmfilter
@@ -18,6 +20,8 @@
             - setup_irclient
     
         - name: Continuing with IR Server side setup
+          when:
+            - only_switch_fs|bool == false
           include_tasks: "ubuntu_22.04/setup_ovpn_server_ubuntu_22.04.yml"
           tags:
             - setup_irserver
@@ -56,6 +60,8 @@
       when: remove_ovpn|bool == false
       block:
         - name: Setting up the filtering bypass routes
+          when:
+            - only_switch_fs|bool == false
           include_tasks: "ubuntu_20.04/setup_rmfilter_ubuntu_20.04.yml"
           tags:
             - setup_rmfilter
@@ -66,6 +72,8 @@
             - setup_irclient
     
         - name: Continuing with IR Server side setup
+          when:
+            - only_switch_fs|bool == false
           include_tasks: "ubuntu_20.04/setup_ovpn_server_ubuntu_20.04.yml"
           tags:
             - setup_irserver

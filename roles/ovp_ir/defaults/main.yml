@@ -1,6 +1,9 @@
 
 # Default variables for Ubuntu systems
 ---
+
+only_switch_fs: false
+
 #### Packages
 required_packages:
   - unzip
