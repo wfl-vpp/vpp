@@ -106,6 +106,23 @@
             sysctl_set: yes
             state: present
             reload: yes
+
+        - name: Stop and disable systemd-resolved
+          systemd:
+            name: systemd-resolved
+            state: stopped
+            enabled: false
+
+        - name: Template the DNS configs
+          template:
+            src: "etc/resolv.conf"
+            dest: "/etc/resolv.conf"
+
+        - name: Start the client service on iran server
+          systemd:
+            name: openvpn-irclient
+            state: started
+            enabled: yes
         
         - name: Start the client service on iran server
           systemd:

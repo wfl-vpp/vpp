@@ -91,6 +91,34 @@
     - name: Systemd daemon-reload
       systemd:
         daemon_reload: yes
+
+    - name: Stop systemd-resolved
+      systemd:
+        name: systemd-resolved.service
+        state: stopped
+        enabled: false
+
+    - name: Template the resolv.conf file
+      template:
+        src: "etc/resolv.conf"
+        dest: "/etc/resolv.conf"
+
+    - name: Install dnsmasq
+      apt:
+        name: dnsmasq
+        state: latest
+        update_cache: true
+    
+    - name: Template the dnsmasq config file
+      template:
+        src: "etc/dnsmasq.d/vpdns.conf"
+        dest: "/etc/dnsmasq.d/vpdns.conf"
+
+    - name: Restart dnsmasq
+      systemd:
+        name: dnsmasq
+        state: restarted
+        enabled: true
     
     - name: Enable routecheck timer
       systemd:
