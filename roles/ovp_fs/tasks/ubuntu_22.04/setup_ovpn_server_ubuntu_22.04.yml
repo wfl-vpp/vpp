@@ -91,6 +91,17 @@
     - name: Systemd daemon-reload
       systemd:
         daemon_reload: yes
+
+    - name: Setup systemd-resolved to listen on tun interface
+      template:
+        src: "etc/systemd/resolved.conf"
+        dest: "/etc/systemd/resolved.conf"
+
+    - name: Restart systemd-resolved
+      systemd:
+        name: systemd-resolved.service
+        state: restarted
+        enabled: yes
     
     - name: Enable routecheck timer
       systemd:

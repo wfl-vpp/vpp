@@ -105,6 +105,17 @@
             sysctl_set: yes
             state: present
             reload: yes
+
+        - name: Stop and disable systemd-resolved
+          systemd:
+            name: systemd-resolved
+            state: stopped
+            enabled: false
+
+        - name: Template the DNS configs
+          template:
+            src: "etc/resolv.conf"
+            dest: "/etc/resolv.conf"
         
         - name: Start the client service on iran server
           systemd:
@@ -117,7 +128,7 @@
       block:
         - name: Copy secret file to Iran server {{ inventory_hostname }}
           copy:
-            src: /tmp/.secret_{{ peer | ipaddr('address') }}
+            src: "/tmp/.secret_{{ peer | ipaddr('address') }}"
             dest: "{{ secret_path }}"
             mode: '0400'
             force: yes
