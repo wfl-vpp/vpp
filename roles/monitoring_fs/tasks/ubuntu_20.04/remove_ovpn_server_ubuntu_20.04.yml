@@ -1,0 +1,76 @@
+---
+- name: Removing OpenVPN Server
+  tags:
+    - remove_irserver
+    - remove_ir_side
+    - ubuntu_20_04
+  block:
+    - name: Removing OpenVPN irserver
+      debug:
+        msg: "Removing OpenVPN Server from {{ inventory_hostname }}"
+    
+    - name: Disabling ip_forward in sysctl and /proc
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '0'
+        sysctl_set: true
+        state: present
+        reload: true
+    
+    - name: Stop and disable all the irserver services
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - "openvpn-route-check.service"
+        - "openvpn-route-check.timer"
+        - "openvpn-routing"
+        - "openvpn-irserver"
+        - "haveged"
+      ignore_errors: true
+      notify: Reload systemd
+    
+    - name: Remove logrotate config files
+      file:
+        path: "/etc/logrotate.d/ovpn"
+        state: absent
+    
+    - name: Remove systemd service files
+      file:
+        path: "/etc/systemd/system/{{ item }}"
+        state: absent
+      loop:
+        - "openvpn-route-check.service"
+        - "openvpn-route-check.timer"
+        - "openvpn-irserver.service"
+        - "openvpn-routing.service"
+      notify:  Reload systemd
+    
+    - name: Removing all the log files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ic_logpath }}"
+        - "{{ is_logpath }}"
+    
+    - name: Removing the related directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ easyrsa_root }}"
+        - "{{ easyrsa_pki }}"
+        - "{{ ovpn_pki }}"
+        - "{{ ovpn_root }}"
+    
+    - name: Removing the policy routing for ovpn
+      lineinfile:
+        dest: "/etc/iproute2/rt_tables"
+        line: "111  ovpn"
+        state: absent
+    
+    - name: Reload systemd
+      systemd:
+        daemon-reload: true

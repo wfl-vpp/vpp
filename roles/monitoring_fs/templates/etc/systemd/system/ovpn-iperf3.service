@@ -1,0 +1,13 @@
+[Unit]
+Description=iperf3 Server for monitoring tunnel speed
+After=network.target openvpn-foreign.service
+Wants=openvpn-foreign.service
+
+[Service]
+ExecStart={{ iperf_path }} -s -p {{ iperf_port }} -B {{ iperf_bind_address }}
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+Also=network.target openvpn-foreign.service

@@ -1,0 +1,11 @@
+---
+
+- name: Reload systemd
+  systemd:
+    daemon-reload: true
+
+- name: Restart ovpn-iperf3
+  systemd:
+    name: ovpn-iperf3.service
+    state: restarted
+

@@ -1,0 +1,61 @@
+---
+- name: Removing OpenVPN client side
+  tags:
+    - remove_irclient
+    - remove_ir_side
+    - ubuntu_20_04
+  block:      
+    - name: Removing openvpn client on ubuntu server
+      debug:
+        msg: "Removing OpenVPN client from {{ inventory_hostname }}"
+    
+    - name: Removing the apt proxy settigns
+      file:
+        path: "/etc/apt/apt.conf.d/80proxy.conf"
+        state: absent
+    
+    - name: Removing the apt repor for openvpn if present
+      apt_repository:
+        repo: "deb [trusted=yes] {{ openvpn_ubuntu_repo_addr }} {{ ansible_distribution_release }} main"
+        state: absent
+        filename: openvpn
+        update_cache: true
+        
+    - name: Making sure the default service is disabled and stopped
+      ignore_errors: true
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - openvpn
+        - openvpn-irclient
+    
+    - name: Removing the secret file
+      file:
+        path: "{{ secret_path }}"
+        state: absent
+    
+    - name: Removing Openvpn-client service file
+      file:
+        path: "/etc/systemd/system/openvpn-irclient.service"
+        state: absent
+      notify: Reload systemd
+    
+    - name: Disabling ip_forward in sysctl and proc
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '0'
+        sysctl_set: true
+        state: present
+        reload: true
+    
+    - name: Removing the ovpn_root directory
+      file:
+        path: "{{ ovpn_root }}"
+        state: absent
+    
+    - name: Reloading systemd
+      systemd:
+        daemon-reload: true
+    

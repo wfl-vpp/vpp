@@ -1,0 +1,78 @@
+---
+- name: Ubuntu 22.04 FS side Monitoring 
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '22.04'
+  block:
+    - name: Setting up monitoring on foreign side
+      when: remove_monitoring|bool == false
+      block:
+
+        - name: Setting up iperf3 on FS side
+          include_tasks: "ubuntu_22.04/setup_iperf_22.04.yml"
+          tags:
+            - setup_iperf_fs
+    
+        - name: Setting up prometheus endpoints on FS sdie
+          include_tasks: "ubuntu_22.04/setup_prometheus_endpoint_22.04.yml"
+          tags:
+            - setup_promend_fs
+      tags:
+        - setup_mon_fs
+        - ubuntu_22_04
+
+    - name: Removing monitoring on foreign side
+      when: remove_monitoring|bool == true
+      block:
+        - name: Removing the iperf3 on FS side
+          include_tasks: "ubuntu_22.04/remove_iperf_ubuntu_22.04.yml"
+          tags:
+            - remove_iperf_fs
+      
+        - name: Removing the prometheus endpoint on FS side
+          include_tasks: "ubuntu_22.04/remove_prometheus_endpoint_ubuntu_22.04.yml"
+          tags:
+            - remove_promend_fs
+    
+      tags:
+        - remove_mon_fs
+        - ubuntu_22_04
+  
+- name: Ubuntu 20.04 FS side Monitoring 
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '20.04'
+  block:
+    - name: Setting up monitoring on foreign side
+      when: remove_monitoring|bool == false
+      block:
+
+        - name: Setting up iperf3 on FS side
+          include_tasks: "ubuntu_20.04/setup_iperf_20.04.yml"
+          tags:
+            - setup_iperf_fs
+    
+        - name: Setting up prometheus endpoints on FS sdie
+          include_tasks: "ubuntu_20.04/setup_prometheus_endpoint_20.04.yml"
+          tags:
+            - setup_promend_fs
+      tags:
+        - setup_mon_fs
+        - ubuntu_20_04
+
+    - name: Removing monitoring on foreign side
+      when: remove_monitoring|bool == true
+      block:
+        - name: Removing the iperf3 on FS side
+          include_tasks: "ubuntu_20.04/remove_iperf_ubuntu_20.04.yml"
+          tags:
+            - remove_iperf_fs
+      
+        - name: Removing the prometheus endpoint on FS side
+          include_tasks: "ubuntu_20.04/remove_prometheus_endpoint_ubuntu_20.04.yml"
+          tags:
+            - remove_promend_fs
+    
+      tags:
+        - remove_mon_fs
+        - ubuntu_20_04

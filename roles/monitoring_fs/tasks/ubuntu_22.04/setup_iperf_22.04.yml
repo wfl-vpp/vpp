@@ -1,0 +1,43 @@
+---
+- name: Setup iperf server 
+  tags:
+    - setup_mon_fs_side
+    - setup_fsmon
+    - ubuntu_22_04
+  block:
+
+    - name: Normal monitoring setup fresh
+      block:
+        - name: Setup iperf server on ubuntu server
+          debug:
+            msg: "Installing iperf3 server on {{ inventory_hostname }}"
+        
+        - name: Disabling and removing auto-update
+          apt:
+            name: "unattended-upgrades"
+            state: absent
+        
+        - name: Update apt
+          apt:
+            update_cache: true
+        
+        - name: Installing the required packages
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop: "{{ required_packages }}"
+        
+        - name: Template iperf3 server service file
+          template:
+            src: "etc/systemd/system/ovpn-iperf3.service"
+            dest: "/etc/systemd/system/ovpn-iperf3.service"
+        
+        - name: Systemd daemon reload
+          systemd:
+            daemon-reload: yes
+        
+        - name: Start the iperf3 monitoring service on fs server
+          systemd:
+            name: ovpn-iperf3.service
+            state: started
+            enabled: yes

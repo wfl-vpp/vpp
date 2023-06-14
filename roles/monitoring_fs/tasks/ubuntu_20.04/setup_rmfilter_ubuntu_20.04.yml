@@ -1,0 +1,27 @@
+---
+- name: Setting up rmFilter
+  tags:
+    - setup_rmfilter
+    - setup_ir_side
+    - ubuntu_20_04
+  block:
+    - name: Templating the nofilter service and timer
+      template:
+        src: "{{ item }}"
+        dest: "/{{ item }}"
+      loop:
+        - "etc/systemd/system/nofilter.service"
+        - "etc/systemd/system/nofilter.timer"
+    
+    - name: Reload systemd
+      systemd:
+        daemon-reload: yes
+    
+    - name: Enabling nofilter service and timer
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - "nofilter.service"
+        - "nofilter.timer"

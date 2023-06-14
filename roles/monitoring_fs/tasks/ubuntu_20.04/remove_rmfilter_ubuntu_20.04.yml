@@ -1,0 +1,29 @@
+---
+- name: Removing rmFilter
+  tags:
+    - remove_rmfilter
+    - remove_ir_side
+    - ubuntu_20_04
+  block:
+    - name: Disabling nofilter service and timer
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - "nofilter.service"
+        - "nofilter.timer"
+      ignore_errors: true
+    
+    - name: Removing the nofilter service and timer
+      file:
+        path: "/etc/systemd/system/{{ item }}"
+        state: absent
+      loop:
+        - "nofilter.service"
+        - "nofilter.timer"
+      notify: Reload systemd
+    
+    - name: Reload systemd
+      systemd:
+        daemon-reload: true

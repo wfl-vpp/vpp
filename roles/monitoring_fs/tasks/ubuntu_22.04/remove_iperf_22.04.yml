@@ -1,0 +1,160 @@
+---
+- name: Setting up OpenVPN Server
+  tags:
+    - setup_ir_side
+    - setup_irserver
+    - ubuntu_22_04
+  block:
+    - name: Setup openvpn server on ubuntu server
+      debug:
+        msg: "Starting OpenVPN Server on {{ inventory_hostname }}"
+    
+    - name: Enabling ip_forward in sysctl and /proc
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+    
+    - name: Stop and disable the irserver
+      systemd:
+        name: openvpn-irserver
+        state: stopped
+        enabled: false
+      ignore_errors: true
+    
+    - name: Make sure the required directories exist on the server
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ easyrsa_root }}"
+        - "{{ easyrsa_pki }}"
+        - "{{ ovpn_pki }}"
+        - "{{ ovpn_root }}"
+    
+    - name: Templating the server openssl passfile
+      template:
+        src: "opt/ovpn/pki/.srvk"
+        dest: "{{ easyrsa_srv_k }}"
+        mode: '0400'
+    
+    - name: Unzipping EasyRSA to "{{ easyrsa_root }}" on the server
+      unarchive:
+        src: "easyrsa.zip"
+        dest: "{{ easyrsa_root }}"
+    
+    - name: Make sure the target directory does not exist
+      file:
+        path: "{{ easyrsa_root }}/src"
+        state: absent
+    
+    - name: Rename and copy the unzipped directory to the proper location
+      shell:
+        cmd: "mv {{ easyrsa_root }}/easy-rsa-release-3.0 {{ easyrsa_root }}/src"
+        chdir: "{{ easyrsa_root }}"
+    
+    - name: Remove the old easyrsa file
+      file:
+        path: "{{ easyrsa_root }}/easy-rsa-release-3.0"
+        state: absent
+    
+    - name: Templating the vars file for EasyRSA
+      template:
+        src: "opt/easyrsa/vars"
+        dest: "{{ easyrsa_root }}/vars"
+    
+    - name: Templating the easysetup script to the server
+      template:
+        src: "opt/easyrsa/easysetup.sh"
+        dest: "{{ easyrsa_root }}/easysetup.sh"
+        mode: '0755'
+    
+    - name: Templating the openvpn config files to the server
+      template:
+        src: "opt/ovpn/ovpn-irserver.conf"
+        dest: "{{ ovpn_root }}/ovpn-irserver.conf"
+    
+    - name: Enable and start haveged to increase entropy
+      systemd:
+        name: haveged
+        state: started
+        enabled: true
+    
+    - name: Run the easysetup script on the server
+      shell:
+        cmd: "{{ easyrsa_root }}/easysetup.sh"
+        chdir: "{{ easyrsa_root }}"
+    
+    - name: Adding a new policy routing table
+      lineinfile:
+        dest: "/etc/iproute2/rt_tables"
+        line: "111  ovpn"
+    
+    - name: Templating the ovpn reroute service
+      template:
+        src: "etc/systemd/system/openvpn-routing.service"
+        dest: "/etc/systemd/system/openvpn-routing.service"
+    
+    - name: Templating the opvnvpn irserver service file
+      template:
+        src: "etc/systemd/system/openvpn-irserver.service"
+        dest: "/etc/systemd/system/openvpn-irserver.service"
+    
+    - name: Reloading systemd files
+      systemd:
+        daemon-reload: yes
+    
+    - name: Enabling and starting the opvnvpn server"
+      systemd:
+        name: openvpn-irserver
+        state: started
+        enabled: yes
+      notify: Restart openvpn-irserver
+    
+    - name: Enabling ip ruleset service to direct traffic
+      systemd:
+        name: openvpn-routing
+        state: started
+        enabled: yes
+    
+    - name: Templating the route check service and timer
+      template:
+        src: "{{ item }}"
+        dest: "/{{ item }}"
+      loop:
+        - "etc/systemd/system/openvpn-route-check.service"
+        - "etc/systemd/system/openvpn-route-check.timer"
+      notify: Reload systemd
+    
+    - name: Reload systemd
+      systemd:
+        daemon-reload: yes
+    
+    - name: Enabling route check service and timer
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - "openvpn-route-check.service"
+        - "openvpn-route-check.timer"
+      notify: Restart routing
+    
+    - name: Disable and stop haveged
+      systemd:
+        name: haveged
+        state: stopped
+        enabled: false
+    
+    - name: Template logrotate config
+      template:
+        src: "etc/logrotate.d/ovpn"
+        dest: "/etc/logrotate.d/ovpn"
+
+    - name: Generating CRL file
+      shell:
+        cmd: "{{ easyrsa_src }}/easyrsa gen-crl"
+        chdir: "{{ easyrsa_pki }}"
+

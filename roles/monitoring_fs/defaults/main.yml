@@ -1,0 +1,16 @@
+
+# Default variables for Ubuntu systems
+---
+
+#### Packages
+required_packages:
+  - iperf3
+
+iperf_bind_address : "10.200.0.1"
+iperf_port: 5005
+iperf_path: "/usr/bin/iperf3"
+
+remove_monitoring: false
+
+target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
+ansible_ssh_private_key_file : "{{ target_ssh_key }}"
