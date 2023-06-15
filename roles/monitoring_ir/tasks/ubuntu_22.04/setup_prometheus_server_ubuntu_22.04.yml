@@ -1,0 +1,55 @@
+---
+- name: Setup Prometheus server
+  tags:
+    - setup_ir_side
+    - setup_promserver_ir
+    - ubuntu_22_04
+  block:
+
+    - name: Normal monitoring setup fresh
+      block:
+        - name: Setup Prometheus Server on ubuntu server
+          debug:
+            msg: "Installing Prometheus Server on {{ inventory_hostname }}"
+        
+        - name: Make sure the target directory exists
+          file:
+            path: "{{ monit_dir }}/Prometheus"
+            state: directory
+            force: true
+
+        - name: Download and unarchive Prometheus server binary
+          unarchive:
+            src: "{{ prometheus_download_url }}"
+            dest: "{{ monit_dir }}/Prometheus"
+            remote_src: true
+
+        - name: Template Prometheus config file to the server
+          template:
+            src: "opt/ovpn_monitoring/Prometheus/prometheus.yml"
+            dest: "{{ monit_dir }}/Prometheus/prometheus-{{ prometheus_version }}.{{ prometheus_arch }}/prometheus.yml"
+            
+        - name: Template iperf3 client and Prometheus server service file
+          template:
+            src: "etc/systemd/system/{{ item }}"
+            dest: "/etc/systemd/system/{{ item }}"
+          loop:
+            - "ovpn-iperf3-client.service"
+            - "ovpn-prometheus.service"
+          notify:
+            - Restart ovpn-iperf3-client
+            - Restart prometheus-server
+        
+        - name: Systemd daemon reload
+          systemd:
+            daemon-reload: yes
+        
+        - name: Start the iperf3 client service and prometheus server on ir server
+          systemd:
+            name: "{{ item }}"
+            state: started
+            enabled: yes
+          loop:
+            - "ovpn-iperf3-client.service"
+            - "ovpn-prometheus.service"
+

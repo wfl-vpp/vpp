@@ -6,6 +6,11 @@
 
 - name: Restart ovpn-iperf3-client
   systemd:
-    name: ovpn-iperf3-client
+    name: ovpn-iperf3-client.service
+    state: restarted
+
+- name: Restart prometheus server
+  systemd:
+    name: ovpn-prometheus.service
     state: restarted
 

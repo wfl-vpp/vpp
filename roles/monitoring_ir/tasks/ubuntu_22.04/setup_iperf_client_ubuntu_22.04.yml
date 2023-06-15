@@ -1,8 +1,8 @@
 ---
 - name: Setup iperf client
   tags:
-    - setup_mon_ir_side
-    - setup_irmon
+    - setup_ir_side
+    - setup_iperf
     - ubuntu_22_04
   block:
 

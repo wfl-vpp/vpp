@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus Server for OVPN
+After=network.target ovpn-iperf3-client.service
+Wants=network.target
+
+[Service]
+ExecStart={{ monit_dir }}/Prometheus/prometheus-{{ prometheus_version }}.{{ prometheus_arch }}/prometheus --config.file={{ monit_dir }}/Prometheus/prometheus-{{ prometheus_version }}.{{ prometheus_arch }}/prometheus.yml --web.listen-address={{ prometheus_listen_address }}:{{ prometheus_listen_port }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
