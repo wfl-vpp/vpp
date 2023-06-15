@@ -9,12 +9,12 @@
       block:
 
         - name: Setting up iperf3 on FS side
-          include_tasks: "ubuntu_22.04/setup_iperf_22.04.yml"
+          include_tasks: "ubuntu_22.04/setup_iperf_ubuntu_22.04.yml"
           tags:
             - setup_iperf_fs
     
         - name: Setting up prometheus endpoints on FS sdie
-          include_tasks: "ubuntu_22.04/setup_prometheus_endpoint_22.04.yml"
+          include_tasks: "ubuntu_22.04/setup_prometheus_endpoint_ubuntu_22.04.yml"
           tags:
             - setup_promend_fs
       tags:
@@ -48,12 +48,12 @@
       block:
 
         - name: Setting up iperf3 on FS side
-          include_tasks: "ubuntu_20.04/setup_iperf_20.04.yml"
+          include_tasks: "ubuntu_20.04/setup_iperf_ubuntu_20.04.yml"
           tags:
             - setup_iperf_fs
     
         - name: Setting up prometheus endpoints on FS sdie
-          include_tasks: "ubuntu_20.04/setup_prometheus_endpoint_20.04.yml"
+          include_tasks: "ubuntu_20.04/setup_prometheus_endpoint_ubuntu_20.04.yml"
           tags:
             - setup_promend_fs
       tags:
