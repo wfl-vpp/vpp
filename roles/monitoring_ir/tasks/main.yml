@@ -1,0 +1,96 @@
+---
+- name: Ubuntu 22.04 IR side
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '22.04'
+  block:
+    - name: Setting up Monitoring on IR side
+      when: remove_monitoring|bool == false
+      block:
+        - name: Setting up iperf client service on IR side
+          include_tasks: "ubuntu_22.04/setup_iperf_client_ubuntu_22.04.yml"
+          tags:
+            - setup_iperf
+      
+        - name: Setting up prometheus endpoints on IR side
+          include_tasks: "ubuntu_22.04/setup_prometheus_endpoint_ubuntu_22.04.yml"
+          tags:
+            - setup_promend_ir
+    
+        - name: Setting up prometheus server on IR side
+          include_tasks: "ubuntu_22.04/setup_prometheus_server_ubuntu_22.04.yml"
+          tags:
+            - setup_promserver_ir
+      tags:
+        - setup_ir_side
+        - ubuntu_22_04
+
+    - name: Removing Monitoring from IR Server
+      when: remove_monitoring|bool == true
+      block:
+        - name: Removing the iperf client from IR side
+          include_tasks: "ubuntu_22.04/remove_iperf_client_ubuntu_22.04.yml"
+          tags:
+            - remove_iperf_client
+      
+        - name: Removing the prometheus endpoints on IR side
+          include_tasks: "ubuntu_22.04/remove_prometheus_endpoints_ubuntu_22.04.yml"
+          tags:
+            - remove_promend_ir
+    
+        - name: Remvoing the prometheus server from IR side
+          include_tasks: "ubuntu_22.04/remove_prometheus_server_ubuntu_22.04.yml"
+          tags:
+            - remove_promserver_ir
+
+      tags:
+        - remove_ir_side
+        - ubuntu_22_04
+  
+- name: Ubuntu 20.04 IR side
+  when:
+    - ansible_distribution == 'Ubuntu' 
+    - ansible_distribution_version == '20.04'
+  block:
+    - name: Setting up Monitoring on IR side
+      when: remove_monitoring|bool == false
+      block:
+        - name: Setting up iperf client service on IR side
+          include_tasks: "ubuntu_20.04/setup_iperf_client_ubuntu_20.04.yml"
+          tags:
+            - setup_iperf
+      
+        - name: Setting up prometheus endpoints on IR side
+          include_tasks: "ubuntu_20.04/setup_prometheus_endpoint_ubuntu_20.04.yml"
+          tags:
+            - setup_promend_ir
+    
+        - name: Setting up prometheus server on IR side
+          include_tasks: "ubuntu_20.04/setup_prometheus_server_ubuntu_20.04.yml"
+          tags:
+            - setup_promserver_ir
+      tags:
+        - setup_ir_side
+        - ubuntu_20_04
+
+    - name: Removing Monitoring from IR Server
+      when: remove_monitoring|bool == true
+      block:
+        - name: Removing the iperf client from IR side
+          include_tasks: "ubuntu_20.04/remove_iperf_client_ubuntu_20.04.yml"
+          tags:
+            - remove_iperf_client
+      
+        - name: Removing the prometheus endpoints on IR side
+          include_tasks: "ubuntu_20.04/remove_prometheus_endpoints_ubuntu_20.04.yml"
+          tags:
+            - remove_promend_ir
+    
+        - name: Remvoing the prometheus server from IR side
+          include_tasks: "ubuntu_20.04/remove_prometheus_server_ubuntu_20.04.yml"
+          tags:
+            - remove_promserver_ir
+
+      tags:
+        - remove_ir_side
+        - ubuntu_20_04

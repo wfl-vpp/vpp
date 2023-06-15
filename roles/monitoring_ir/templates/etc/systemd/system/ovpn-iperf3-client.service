@@ -1,0 +1,14 @@
+[Unit]
+Description=iperf client service to expose prometheus Metrics for tunnel speed
+After=network.target openvpn-irclient.service
+Wants=openvpn-irclient.service
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/ovpn_monitoring/iperf3_client.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+Also=network.target openvpn-irclient.service
+

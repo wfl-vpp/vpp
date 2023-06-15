@@ -1,0 +1,53 @@
+---
+- name: Setup iperf client
+  tags:
+    - setup_mon_ir_side
+    - setup_irmon
+    - ubuntu_22_04
+  block:
+
+    - name: Normal monitoring setup fresh
+      block:
+        - name: Setup iperf client service on ubuntu server
+          debug:
+            msg: "Installing iperf3 client service on {{ inventory_hostname }}"
+        
+        - name: Disabling and removing auto-update
+          apt:
+            name: "unattended-upgrades"
+            state: absent
+        
+        - name: Update apt
+          apt:
+            update_cache: true
+        
+        - name: Installing the required packages
+          apt:
+            name: "{{ item }}"
+            state: present
+          loop: "{{ required_packages }}"
+
+        - name: Make sure the target directory exists
+          file:
+            path: "{{ monit_dir }}"
+            state: directory
+
+        - name: Template the python script to run iperf and export prometheus metrics
+          template:
+            src: "opt/ovpn_monitoring/iperf3_client.py"
+            dest: "/opt/ovpn_monitoring/iperf3_client.py"
+        
+        - name: Template iperf3 client service file
+          template:
+            src: "etc/systemd/system/ovpn-iperf3-client.service"
+            dest: "/etc/systemd/system/ovpn-iperf3-client.service"
+        
+        - name: Systemd daemon reload
+          systemd:
+            daemon-reload: yes
+        
+        - name: Start the iperf3 client service on ir server
+          systemd:
+            name: ovpn-iperf3-client.service
+            state: started
+            enabled: yes

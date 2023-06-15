@@ -1,0 +1,23 @@
+
+# Default variables for Ubuntu systems
+---
+
+#### Packages
+required_packages:
+  - iperf3
+
+iperf_bind_address : "10.200.0.2"
+iperf_server_address : "10.200.0.1"
+iperf_server_port : 5005
+iperf_path : "/usr/bin/iperf3"
+iperf_run_period : 30 # run iperf every x seconds
+iperf_dl_speed_guage_metric_name : "TUNNEL_DL"
+iperf_ul_speed_guage_metric_name : "TUNNEL_UL"
+
+remove_monitoring: false
+
+monit_dir :  "/opt/ovpn_monitoring"
+prometheus_iperf_endpoint_port : 8001
+
+target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
+ansible_ssh_private_key_file : "{{ target_ssh_key }}"
