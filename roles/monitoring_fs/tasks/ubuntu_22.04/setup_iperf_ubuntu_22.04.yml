@@ -1,8 +1,8 @@
 ---
 - name: Setup iperf server 
   tags:
-    - setup_mon_fs_side
-    - setup_fsmon
+    - setup_mon_fs
+    - setup_iperf_fs
     - ubuntu_22_04
   block:
 

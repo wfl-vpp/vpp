@@ -10,6 +10,13 @@ iperf_bind_address : "10.200.0.1"
 iperf_port: 5005
 iperf_path: "/usr/bin/iperf3"
 
+monit_dir : "/opt/ovpn_monitoring"
+python_path : "/usr/bin/python3"
+
+loadtime_prometheus_expose_port : 8008
+loadtime_prometheus_listen_addr : "{{ iperf_bind_address }}"
+loadtime_interval : 10
+
 remove_monitoring: false
 
 target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
