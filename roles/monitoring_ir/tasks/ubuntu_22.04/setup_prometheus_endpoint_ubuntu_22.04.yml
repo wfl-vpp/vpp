@@ -1,0 +1,38 @@
+---
+- name: Setup Prometheus metric endpoints
+  tags:
+    - setup_ir_side
+    - setup_promend_ir
+    - ubuntu_22_04
+  block:
+
+    - name: Normal monitoring setup fresh
+      block:
+        - name: Setup Prometheus endpoints on ubuntu server
+          debug:
+            msg: "Exposing prometheus metrics on {{ inventory_hostname }}"
+        
+        - name: Make sure the target directory exists
+          file:
+            path: "{{ monit_dir }}"
+            state: directory
+
+        - name: Template the python script file
+          template:
+            src: "opt/ovpn_monitoring/loadtime_metrics.py"
+            dest: "/opt/ovpn_monitoring/loadtime_metrics.py"
+
+        - name: Template the loadtime service file
+          template:
+            src: "etc/systemd/system/ovpn-loadtime-monitor.service"
+            dest: "/etc/systemd/system/ovpn-loadtime-monitor.service"
+        
+        - name: Systemd daemon reload
+          systemd:
+            daemon-reload: yes
+        
+        - name: Start the loadtime monitoring service on fs server
+          systemd:
+            name: ovpn-loadtime-monitor.service
+            state: started
+            enabled: yes

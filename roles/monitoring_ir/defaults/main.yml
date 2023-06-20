@@ -14,10 +14,20 @@ iperf_run_period : 30 # run iperf every x seconds
 iperf_dl_speed_guage_metric_name : "TUNNEL_DL"
 iperf_ul_speed_guage_metric_name : "TUNNEL_UL"
 
+
+loadtime_peer_prometheus_metric_port : 8008
+loadtime_prometheus_expose_port : 8008
+loadtime_prometheus_listen_addr : "127.0.0.1"
+loadtime_interval : 10
+
+IR_FS_tunnel_interface : "tun0"
+
 remove_monitoring: false
 
 monit_dir :  "/opt/ovpn_monitoring"
+python_path : "/usr/bin/python3"
 prometheus_iperf_endpoint_port : 8001
+prometheus_iperf_listen_addr : "127.0.0.1"
 
 target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file : "{{ target_ssh_key }}"

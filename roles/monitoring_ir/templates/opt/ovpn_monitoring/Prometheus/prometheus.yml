@@ -26,4 +26,4 @@ scrape_configs:
     # scheme defaults to 'http'.
 
     static_configs:
-      - targets: ["localhost:{{ prometheus_iperf_endpoint_port }}"]
+            - targets: ["{{ prometheus_iperf_listen_addr }}:{{ prometheus_iperf_endpoint_port }}", "{{ loadtime_prometheus_listen_addr }}:{{ loadtime_prometheus_expose_port }}", "10.200.0.1:{{ loadtime_peer_prometheus_metric_port }}"]
