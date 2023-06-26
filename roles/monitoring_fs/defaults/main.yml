@@ -5,6 +5,9 @@
 #### Packages
 required_packages:
   - iperf3
+  - python3-prometheus-client
+  - speedtest-cli
+  - python3-requests
 
 iperf_bind_address : "10.200.0.1"
 iperf_port: 5005

@@ -1,0 +1,11 @@
+---
+
+apiVersion: 1
+
+providers:
+  - name: 'ovpn'
+    allowUiUpdates: true
+    options:
+      path: {{ monit_dir }}/grafana_dashboards
+      foldersFromFilesStructure: true
+

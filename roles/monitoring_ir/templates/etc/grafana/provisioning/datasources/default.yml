@@ -1,0 +1,12 @@
+---
+
+apiVersion: 1
+
+
+datasources:
+  - name: ovpn-monitoring
+    type: prometheus
+    access: proxy
+    url: http://{{ prometheus_listen_address }}:{{ prometheus_listen_port }}
+    uid: {{ grafana_datasource_uuid }}
+

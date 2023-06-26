@@ -21,6 +21,12 @@
           include_tasks: "ubuntu_22.04/setup_prometheus_server_ubuntu_22.04.yml"
           tags:
             - setup_promserver_ir
+
+        - name: Setting up grafana server on IR side
+          include_tasks: "ubuntu_22.04/setup_grafana_server_ubuntu_22.04.yml"
+          tags:
+            - setup_grafana_ir
+
       tags:
         - setup_ir_side
         - ubuntu_22_04

@@ -1,0 +1,129 @@
+---
+- name: Setup Grafana server
+  tags:
+    - setup_ir_side
+    - setup_grafana_ir
+    - ubuntu_22_04
+  block:
+
+    - name: Normal monitoring setup fresh
+      block:
+        - name: Setup Grafana Server on ubuntu server
+          debug:
+            msg: "Installing Grafana Server on {{ inventory_hostname }}"
+
+        - name: Download the grafana repo signing key
+          get_url:
+            url: "https://apt.grafana.com/gpg.key"
+            dest: "/usr/share/keyrings/grafana.key"
+
+        - name: Add grafana repo
+          template:
+            src: "etc/apt/sources.list.d/grafana.list"
+            dest: "/etc/apt/sources.list.d/grafana.list"
+
+        - name: Update apt repo
+          apt:
+            update_cache: true
+
+        - name: Install grafana-enterprise package
+          apt:
+            name: grafana-enterprise
+            state: present
+
+        - name: Stop the grafana server
+          systemd:
+            name: grafana-server.service
+            state: stopped
+
+        - name: Generate the random UUID for the grafana datasource
+          set_fact:
+            grafana_datasource_uuid: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') | to_uuid }}"
+
+#        - name: Generate the initial admin password
+#          set_fact:
+#            grafana_initial_admin_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+#
+        - name: Template the provisioning and the config files for dashboards and datasources
+          template:
+            src: "{{ item }}"
+            dest: "/{{ item }}"
+            group: grafana
+            owner: grafana
+          loop:
+            - "etc/grafana/provisioning/datasources/default.yml"
+            - "etc/grafana/provisioning/dashboards/ovpn.yaml"
+            - "etc/grafana/grafana.ini"
+
+        - name: Make sure the target directory for dashboards exist
+          file:
+            path: "{{ grafana_dashboards_dir }}"
+            state: directory
+            group: grafana
+            owner: grafana
+
+        - name: Template the grafana dashboard to the server
+          template:
+            src: "opt/ovpn_monitoring/grafana_dashboards/ovpn_speed.json"
+            dest: "{{ grafana_dashboards_dir }}/ovpn_speed.json"
+            group: grafana
+            owner: grafana
+
+        - name: Start the grafana service
+          systemd:
+            name: grafana-server.service
+            state: started
+
+        - name: Wait for grafana to startup
+          wait_for:
+            host: "{{ grafana_listen_addr if grafana_listen_addr is defined and grafana_listen_addr != '' else 'localhost' }}"
+            port: "{{ grafana_listen_port }}"
+            state: started
+            timeout: 60
+
+        - name: Generat a new password for the admin user
+          set_fact:
+            grafana_admin_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+
+        - name: Use the initial admin password to update the admin password
+          uri:
+            url: http://localhost:{{ grafana_listen_port }}/api/admin/users/1/password
+            method: PUT
+            force_basic_auth: true
+            headers:
+              Content-Type: application/json
+            body_format: json
+            body:
+              password: "{{ grafana_admin_pass }}"
+            return_content: yes
+            url_username: "{{ grafana_admin_user }}"
+            url_password: "{{ grafana_initial_admin_pass }}"
+          register: grafana_admin_pass_state
+
+        - name: The response from grafana server for admin pass update
+          debug:
+            var: grafana_admin_pass_state.content
+
+        - name: Use the updated password and make the speed dashboard as the default home dashboard
+          uri:
+            url: "http://localhost:3000/api/user/preferences"
+            method: PUT
+            force_basic_auth: true
+            headers:
+              Content-Type: application/json
+            body_format: json
+            body:
+              homeDashboardId: 1
+            return_content: yes
+            user: "{{ grafana_admin_user }}"
+            password: "{{ grafana_admin_pass }}"
+          register: grafana_preference_response
+
+        - name: The response from grafana server for setting home dashboard
+          debug:
+            var: grafana_preference_response.content
+
+        - name: Print out the grafana admin password
+          debug:
+            msg: "Grafana Admin Pass: {{ grafana_admin_pass }}"
+

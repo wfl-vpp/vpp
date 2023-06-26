@@ -5,6 +5,13 @@
 #### Packages
 required_packages:
   - iperf3
+  - python3-prometheus-client
+  - speedtest-cli
+  - python3-requests
+  - python3-requests-toolbelt
+  - apt-transport-https
+  - software-properties-common
+  - wget
 
 iperf_bind_address : "10.200.0.2"
 iperf_server_address : "10.200.0.1"
@@ -32,9 +39,17 @@ prometheus_iperf_listen_addr : "127.0.0.1"
 target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file : "{{ target_ssh_key }}"
 
-prometheus_listen_address : "0.0.0.0"
+prometheus_listen_address : "127.0.0.1"
 prometheus_listen_port : 9090
 prometheus_version : "2.37.8"
 prometheus_arch : "linux-amd64"
 prometheus_download_url : "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.{{ prometheus_arch }}.tar.gz"
+
+grafana_dashboards_dir : "{{ monit_dir }}/grafana_dashboards"
+grafana_datasource_uuid : ""  # will be filled in during the role execution
+grafana_admin_user : "admin"
+grafana_initial_admin_pass : "admin" # will be filled in during the role execution
+grafana_admin_pass : "" # will be set during the execution
+grafana_listen_addr: "" # empty means all interfaces
+grafana_listen_port: "3000"
 

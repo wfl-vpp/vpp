@@ -9,7 +9,7 @@
     name: ovpn-iperf3-client.service
     state: restarted
 
-- name: Restart prometheus server
+- name: Restart prometheus-server
   systemd:
     name: ovpn-prometheus.service
     state: restarted
