@@ -12,24 +12,33 @@
           debug:
             msg: "Installing Grafana Server on {{ inventory_hostname }}"
 
-        - name: Download the grafana repo signing key
-          get_url:
-            url: "https://apt.grafana.com/gpg.key"
-            dest: "/usr/share/keyrings/grafana.key"
+#        - name: Copy grafana repo signing key to the server
+#          copy:
+#            src: "usr/share/keyrings/grafana.key"
+#            dest: "/usr/share/keyrings/grafana.key"
+#
+#        - name: Download the grafana repo signing key
+#          get_url:
+#            url: "https://apt.grafana.com/gpg.key"
+#            dest: "/usr/share/keyrings/grafana.key"
+#
+#        - name: Add grafana repo
+#          template:
+#            src: "etc/apt/sources.list.d/grafana.list"
+#            dest: "/etc/apt/sources.list.d/grafana.list"
+#
+#        - name: Update apt repo
+#          apt:
+#            update_cache: true
 
-        - name: Add grafana repo
-          template:
-            src: "etc/apt/sources.list.d/grafana.list"
-            dest: "/etc/apt/sources.list.d/grafana.list"
-
-        - name: Update apt repo
-          apt:
-            update_cache: true
+        - name: Copy grafana installation to the server
+          copy:
+            src: "opt/grafana-enterprise_10.0.1_amd64.deb"
+            dest: "/opt/grafana-enterprise_10.0.1_amd64.deb"
 
         - name: Install grafana-enterprise package
           apt:
-            name: grafana-enterprise
-            state: present
+            deb: "/opt/grafana-enterprise_10.0.1_amd64.deb"
 
         - name: Stop the grafana server
           systemd:
