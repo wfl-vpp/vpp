@@ -1,0 +1,9 @@
+[Unit]
+Description=The script to change the Peer IP address
+
+[Service]
+ExecStart=/bin/bash {{ ovpn_root }}/peer_rotate.sh
+
+[Install]
+WantedBy=default.target
+

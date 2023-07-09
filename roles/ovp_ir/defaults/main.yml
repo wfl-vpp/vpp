@@ -48,6 +48,8 @@ ovpn_IS_server_proto: "tcp-server"
 ovpn_IS_client_proto: "tcp-client"
 fs_server_port: 443
 is_server_port: 443
+ovpn_max_peer_rotate_interval: 120
+
 
 ping_client_interval: 10   # Ping the client every 10 sec.
 restart_if_noresp_x2: 60   # Restart the connection if no reply came from client after 2 * 60 sec.

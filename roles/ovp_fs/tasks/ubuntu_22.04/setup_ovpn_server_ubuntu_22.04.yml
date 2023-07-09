@@ -36,15 +36,31 @@
         - openvpn
         - openvpn-iptables
         - openvpn-foreign
+
+    - name: Check if the secret file already exists on ansible host
+      stat:
+        path: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+      register: secret_file_state
+      delegate_to: localhost
     
-    - name: Generating Secret
-      command: /usr/sbin/openvpn --genkey secret {{ secret_path }}
-    
-    - name: Get the secret from foreign server
-      fetch:
-        src: "{{ secret_path }}"
-        dest: "/tmp/.secret_{{ inventory_hostname }}"
-        flat: yes
+    - name: If secret file does not exist on ansible host create it on foreign server
+      block:
+ 
+      - name: Generating Secret
+        command: /usr/sbin/openvpn --genkey secret {{ secret_path }}
+      
+      - name: Get the secret from foreign server
+        fetch:
+          src: "{{ secret_path }}"
+          dest: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+          flat: yes
+      when: not secret_file_state.stat.exists
+
+    - name: If the secret file exists on the ansible host upload it to foreign server
+      copy:
+        src: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+        dest: "{{ secret_path }}"
+      when: secret_file_state.stat.exists
     
     - name: Template systemd service file
       template:

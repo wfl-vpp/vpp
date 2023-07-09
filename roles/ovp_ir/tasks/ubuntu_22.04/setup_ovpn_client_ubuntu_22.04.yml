@@ -84,7 +84,7 @@
         
         - name: Copy secret file to Iran server {{ inventory_hostname }}
           copy:
-            src: /tmp/.secret_{{ peer | ipaddr('address') }}
+            src: "/tmp/.secret_{{ inventory_hostname }}"
             dest: "{{ secret_path }}"
             mode: '0400'
             force: yes
@@ -122,13 +122,37 @@
             name: openvpn-irclient
             state: started
             enabled: yes
+
+        - name: Only if there are multiple peers
+          block:
+            - name: Create text file with peers list
+              copy:
+                dest: "{{ ovpn_root }}/peers"
+                content: "{{ peers | join('\n') }}"
+
+            - name: Template the peer_rotate script
+              template:
+                src: "opt/ovpn/peer_rotate.sh"
+                dest: "{{ ovpn_root }}/peer_rotate.sh"
+                mode: '0755'
+
+            - name: Template the peer_rotate service and timer
+              template:
+                src: "{{ item }}"
+                dest: "/{{ item }}"
+              loop:
+                - "etc/systemd/system/ovpn_peer_rotate.service"
+                - "etc/systemd/system/ovpn_peer_rotate.timer"
+
+          when: peers | length > 1
+
     
     - name: Only updating the FS related parts
       when: only_switch_fs|bool == true
       block:
         - name: Copy secret file to Iran server {{ inventory_hostname }}
           copy:
-            src: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+            src: "/tmp/.secret_{{ inventory_hostname }}"
             dest: "{{ secret_path }}"
             mode: '0400'
             force: yes
@@ -151,5 +175,5 @@
     - name: Remove local secret file
       delegate_to: 127.0.0.1
       file:
-        path: /tmp/.secret_{{ peer | ipaddr('address') }}
+        path: "/tmp/.secret_{{ inventory_hostname }}"
         state: absent
