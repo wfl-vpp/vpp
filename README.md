@@ -135,7 +135,7 @@ ansible-playbook -i inventory.yml playbooks/add_client.yml -l "Y.Y.Y.Y" --tags a
 Note that how we limitted the execution of the playbook to the mentioned server (this is the B server, e.g. the one located in Iran).
 
 After that, in the control host (the host which you ran the ansible-playbook command on), there will be a folder containing the config file for the recently added client.
-Please not that all the client config files will ask for a password at some point, after running the addclient playbook, the password will be printed out on the screen in a debug message at the end of the playbook execution.
+Please note that all the client config files will ask for a password at some point, after running the addclient playbook, the password will be printed out on the screen in a debug message at the end of the playbook execution.
 
 ## Setting up monitoring
 It is also possible to setup a Grafana dashboard, depicting the connection speed between peer servers and also the load time of some common pages both from the IR side of the tunnel and from the foreign servers themselves.
