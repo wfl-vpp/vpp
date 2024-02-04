@@ -5,6 +5,7 @@ remove_ovpn: false
 only_switch_fs: false
 
 setup_stunnel: false
+stunnel_package_name: "stunnel4"
 stunnel_listen_port: 443
 stunnel_cert_file_path: "/opt/ovpn/stunnel-cert.pem"
 stunnel_key_file_path: "/opt/ovpn/stunnel-key.pem"

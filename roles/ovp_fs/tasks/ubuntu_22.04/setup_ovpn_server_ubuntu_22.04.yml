@@ -25,6 +25,13 @@
         name: "{{ openvpn_ubuntu_package_name }}"
         state: latest
         update_cache: yes
+
+    - name: Installing stunnel on the host
+      ansible.builtin.apt:
+        name: "{{ stunnel_package_name }}"
+        state: latest
+        update_cache: yes
+      when: setup_stunnel | bool
     
     - name: Make sure the default service is disabled and stopped
       ignore_errors: yes
@@ -36,6 +43,8 @@
         - openvpn
         - openvpn-iptables
         - openvpn-foreign
+        - stunnel
+        - stunnel4
 
     - name: Check if the secret file already exists on ansible host
       stat:
