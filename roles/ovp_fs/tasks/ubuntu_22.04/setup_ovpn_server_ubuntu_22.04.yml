@@ -79,7 +79,40 @@
       template:
         src: "etc/systemd/system/openvpn-iptables.service"
         dest: "/etc/systemd/system/openvpn-iptables.service"
-    
+
+    - name: Configure Stunnel if setup_stunnel is set
+      block:
+
+      - name: Make sure stunnel directory exists under etc
+        file:
+          path: "/etc/stunnel"
+          state: "directory"
+      
+      - name: Generate the required cert and key
+        shell: openssl req -x509 -newkey rsa:4096 -keyout {{ stunnel_key_file_path }} -out {{ stunnel_cert_file_path }} -sha256 -days {{ stunnel_cert_validity_days }} -nodes -subj "/C={{ stunnel_C }}/ST={{ stunnel_ST }}/L={{ stunnel_L}}/O={{ stunnel_O }}/OU={{ stunnel_OU }}/CN={{ stunnel_CN }}"
+
+      - name: Template the stunnel config file
+        template:
+          src: "etc/stunnel/stunnel-ovpn.conf"
+          dest: "/etc/stunnel/stunnel-ovpn.conf"
+
+      - name: Template the stunnel service file
+        template:
+          src: "etc/systemd/system/ovpn-stunnel.service"
+          dest: "/etc/systemd/system/ovpn-stunnel.service"
+
+      - name: Reload systemd
+        systemd:
+          daemon-reload: yes
+  
+      - name: Start Stunnel server
+        systemd:
+          name: "ovpn-stunnel.service"
+          state: started
+          enabled: yes
+
+      when: setup_stunnel | bool
+      
     - name: Enable and start OpenVPN iptables service
       systemd:
         name: "openvpn-iptables"
