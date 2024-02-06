@@ -6,6 +6,11 @@
     - ubuntu_22_04
   block:
 
+    - name: register fqdn
+      command: "hostname --fqdn"
+      register: peer_fqdn
+      delegate_to: "{{ peers[0] | ipaddr('address') }}"
+    
     - name: Normal setup fresh start
       when: only_switch_fs|bool == false
       block:
@@ -81,6 +86,9 @@
           loop:
             - openvpn
             - openvpn-irclient
+            - stunnel
+            - stunnel4
+            - stunnel-ovpn
         
         - name: Copy secret file to Iran server {{ inventory_hostname }}
           copy:
@@ -116,14 +124,50 @@
           template:
             src: "etc/resolv.conf"
             dest: "/etc/resolv.conf"
-        
+
+        - name: Stunnel specific setup
+          block:
+
+            - name: Template the stunnel config file
+              template:
+                src: "etc/stunnel/stunnel-client.conf"
+                dest: "/etc/stunnel/stunnel-client.conf"
+    
+            - name: Make sure log and run directories exist for stunnel
+              file:
+                path: "{{ item }}"
+                state: directory
+                owner: stunnel4
+                group: stunnel4
+              loop:
+                - "/var/log/stunnel4"
+                - "/var/run/stunnel4"
+    
+            - name: Template the stunnel systemd service file
+              template:
+                src: "etc/systemd/system/stunnel-ovpn.service"
+                dest: "/etc/systemd/system/stunnel-ovpn.service"
+
+            - name: Systemd daemon-reload
+              systemd:
+                daemon-reload: yes
+
+            - name: Start the stunnel service
+              systemd:
+                name: stunnel-ovpn.service
+                state: started
+                enabled: yes
+            
+          when: setup_stunnel|bool == true
+
+            
         - name: Start the client service on iran server
           systemd:
             name: openvpn-irclient
             state: started
             enabled: yes
 
-        - name: Only if there are multiple peers
+        - name: Only if there are multiple peers and stunnel is disabled
           block:
             - name: Create text file with peers list
               copy:
@@ -144,7 +188,34 @@
                 - "etc/systemd/system/ovpn_peer_rotate.service"
                 - "etc/systemd/system/ovpn_peer_rotate.timer"
 
-          when: peers | length > 1
+          when: 
+            - peers | length > 1
+            - setup_stunnel | bool == false
+
+        - name: Only if there are multiple peers and stunnel is Enabled
+          block:
+            - name: Create text file with peers list
+              copy:
+                dest: "{{ ovpn_root }}/peers"
+                content: "{{ peers | join('\n') }}"
+
+            - name: Template the peer_rotate_stunnel script
+              template:
+                src: "opt/ovpn/peer_rotate_stunnel.sh"
+                dest: "{{ ovpn_root }}/peer_rotate_stunnel.sh"
+                mode: '0755'
+
+            - name: Template the peer_rotate_stunnel service and timer
+              template:
+                src: "{{ item }}"
+                dest: "/{{ item }}"
+              loop:
+                - "etc/systemd/system/ovpn_peer_rotate_stunnel.service"
+                - "etc/systemd/system/ovpn_peer_rotate_stunnel.timer"
+
+          when:
+            - peers | length > 1
+            - setup_stunnel | bool == true
 
     
     - name: Only updating the FS related parts
@@ -161,6 +232,13 @@
           template:
             src: "etc/systemd/system/openvpn-irclient.service"
             dest: "/etc/systemd/system/openvpn-irclient.service"
+          when: setup_stunnel|bool == false
+
+        - name: Template the stunnel config
+          template:
+            src:
+            dest:
+          when: setup_stunnel|bool == true
         
         - name: Systemd daemon reload
           systemd:
@@ -177,3 +255,11 @@
       file:
         path: "/tmp/.secret_{{ inventory_hostname }}"
         state: absent
+
+
+#    - name: setup facts
+#      setup:
+#        filter:
+#          - 'ansible_fqdn'
+#      delegate_to: "{{ peers[0] | ipaddr('address') }}"
+#      delegate_facts: true

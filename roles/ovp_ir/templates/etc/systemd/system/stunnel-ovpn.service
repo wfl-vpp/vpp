@@ -1,0 +1,12 @@
+[Unit]
+Description=Stunnel Client Service for OpenVPN
+
+[Service]
+Type=forking
+WorkingDirectory=/opt/ovpn/
+ExecStart=/usr/bin/stunnel4 /etc/stunnel/stunnel-client.conf
+SuccessExitStatus=0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

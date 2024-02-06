@@ -4,6 +4,11 @@
 
 only_switch_fs: false
 
+
+setup_stunnel: false
+stunnel_package_name: "{% if setup_stunnel|bool %}stunnel4{% else %}zip{% endif %}" # if stunnel is not set up install zip or nothing
+stunnel_listen_port: 445
+
 #### Packages
 required_packages:
   - unzip
@@ -11,6 +16,8 @@ required_packages:
   - haveged
   - debconf
   - debconf-utils
+  - "{{ stunnel_package_name }}"
+
 setup_apt_proxy: false
 
 remove_ovpn: false

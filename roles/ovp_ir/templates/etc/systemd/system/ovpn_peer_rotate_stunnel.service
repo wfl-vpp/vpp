@@ -1,0 +1,9 @@
+[Unit]
+Description=The script to change the Peer IP address for stunnel
+
+[Service]
+ExecStart=/bin/bash {{ ovpn_root }}/peer_rotate_stunnel.sh
+
+[Install]
+WantedBy=default.target
+

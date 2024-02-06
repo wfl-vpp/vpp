@@ -1,12 +1,13 @@
 [Unit]
 Description=OpenVPN Service - Iran client service
 PartOf=ovpn_peer_rotate.service
+{% if setup_stunnel|bool %}                                                                                             Wants=ovpn-stunnel.service                                                                                              After=ovpn-stunnel.service                                                                                              {% endif %}
 
 [Service]
 Type=forking
 User=root
 WorkingDirectory={{ ovpn_root }}
-ExecStart=/usr/sbin/openvpn --dev tun --secret {{ secret_path }} --ifconfig 10.200.0.2 10.200.0.1 --remote {{ peers[0] | ipaddr('address') }} --verb {{ verbosity }} --proto {{ ovpn_IS_client_proto }} --rport {{ fs_server_port }} --auth none --daemon --log-append {{ ic_logpath }}
+ExecStart=/usr/sbin/openvpn --dev tun --secret {{ secret_path }} --ifconfig 10.200.0.2 10.200.0.1 --remote {% if setup_stunnel|bool %}127.0.0.1 --rport {{ stunnel_listen_port }} {% else %}{{ peers[0] | ipaddr('address') }} --rport {{ fs_server_port }}{% endif %} --verb {{ verbosity }} --proto {{ ovpn_IS_client_proto }} --auth none --daemon --log-append {{ ic_logpath }}
 Restart=always
 
 [Install]

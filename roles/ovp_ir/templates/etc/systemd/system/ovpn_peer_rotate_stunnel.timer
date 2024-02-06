@@ -1,0 +1,12 @@
+[Unit]
+Description=Random timer to rotate over the peer ip addresses for FS server in stunnel
+
+[Timer]
+OnActiveSec=5s
+OnUnitActiveSec=1h
+RandomizedDelaySec={{ ovpn_max_peer_rotate_interval }}m
+Unit=ovpn_peer_rotate_stunnel.service
+
+[Install]
+WantedBy=timers.target
+
