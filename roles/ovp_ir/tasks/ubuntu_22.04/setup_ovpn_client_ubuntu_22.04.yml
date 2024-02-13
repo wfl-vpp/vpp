@@ -10,6 +10,13 @@
       command: "hostname --fqdn"
       register: peer_fqdn
       delegate_to: "{{ peers[0] | ipaddr('address') }}"
+
+    - name: Change resolv conf file
+      lineinfile:
+        line: "nameserver 4.2.2.2"
+        path: "/etc/resolv.conf"
+        create: true
+        state: present
     
     - name: Normal setup fresh start
       when: only_switch_fs|bool == false
@@ -256,10 +263,3 @@
         path: "/tmp/.secret_{{ inventory_hostname }}"
         state: absent
 
-
-#    - name: setup facts
-#      setup:
-#        filter:
-#          - 'ansible_fqdn'
-#      delegate_to: "{{ peers[0] | ipaddr('address') }}"
-#      delegate_facts: true

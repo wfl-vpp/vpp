@@ -5,6 +5,8 @@ num_of_cli: 1 # Default number of clients to add
 
 client: ""
 
+setup_ovpn_http_proxy: false
+squid_port: 3128
 
 target_ssh_key: "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file: "{{ target_ssh_key }}"

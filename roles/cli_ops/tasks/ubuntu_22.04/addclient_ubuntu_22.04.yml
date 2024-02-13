@@ -8,6 +8,16 @@
     - name: Adding a client to the serve
       debug:
         msg: "Adding a client to {{ inventory_hostname }}"
+
+    - name: Checking if http_proxy should be enabled
+      stat:
+        path: "{{ ovpn_root }}/.http_proxy"
+      register: http_proxy_stat
+
+    - name: Set http proxy fact
+      set_fact:
+        setup_ovpn_http_proxy: true
+      when: http_proxy_stat.stat.exists|bool
     
     - name: Make sure the required direcotries exist
       file:

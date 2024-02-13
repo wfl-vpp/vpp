@@ -1,0 +1,12 @@
+[Unit]
+Description=Iptables rules service for Squid and OpenVPN
+
+[Service]
+Type=oneshot
+User=root
+ExecStart={{ iptables_path }} -I INPUT -p tcp --dport {{ is_server_port }} ! -s {{ inventory_hostname }} -j REJECT
+ExecStop={{ iptables_path }} -D INPUT -p tcp --dport {{ is_server_port }} ! -s {{ inventory_hostname }} -j REJECT
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

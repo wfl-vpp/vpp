@@ -4,6 +4,11 @@
 
 only_switch_fs: false
 
+setup_ovpn_http_proxy: false
+squid_port: 3128
+squid_main_config: "/etc/squid/squid.conf"
+
+iptables_path: "/usr/sbin/iptables"
 
 setup_stunnel: false
 stunnel_package_name: "{% if setup_stunnel|bool %}stunnel4{% else %}zip{% endif %}" # if stunnel is not set up install zip or nothing
@@ -17,6 +22,7 @@ required_packages:
   - debconf
   - debconf-utils
   - "{{ stunnel_package_name }}"
+  - squid
 
 setup_apt_proxy: false
 
