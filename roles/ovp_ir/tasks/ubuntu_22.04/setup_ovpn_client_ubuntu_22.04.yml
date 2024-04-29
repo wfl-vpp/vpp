@@ -139,6 +139,14 @@
               template:
                 src: "etc/stunnel/stunnel-client.conf"
                 dest: "/etc/stunnel/stunnel-client.conf"
+
+            - name: Copy the peer certificate for stunnel to the server
+              copy:
+                src: "/tmp/.stunnel_cert_{{ inventory_hostname }}.crt"
+                dest: "/etc/stunnel/stunnel_peer_cert.crt"
+                mode: '0400'
+                force: yes
+
     
             - name: Make sure log and run directories exist for stunnel
               file:
@@ -243,8 +251,8 @@
 
         - name: Template the stunnel config
           template:
-            src:
-            dest:
+            src: "etc/stunnel/stunnel-client.conf"
+            dest: "/etc/stunnel/stunnel-client.conf"
           when: setup_stunnel|bool == true
         
         - name: Systemd daemon reload
