@@ -100,6 +100,12 @@
       - name: Generate the required cert and key
         shell: openssl req -x509 -newkey rsa:4096 -keyout {{ stunnel_key_file_path }} -out {{ stunnel_cert_file_path }} -sha256 -days {{ stunnel_cert_validity_days }} -nodes -subj "/C={{ stunnel_C }}/ST={{ stunnel_ST }}/L={{ stunnel_L}}/O={{ stunnel_O }}/OU={{ stunnel_OU }}/CN={{ stunnel_CN }}"
 
+      - name: Copy the stunnel cert file to ansible host
+        fetch:
+          src: "{{ stunnel_cert_file_path }}"
+          dest: "/tmp/.stunnel_cert_{{ peer | ipaddr('address') }}.crt"
+          flat: yes
+
       - name: Template the stunnel config file
         template:
           src: "etc/stunnel/stunnel-ovpn.conf"
