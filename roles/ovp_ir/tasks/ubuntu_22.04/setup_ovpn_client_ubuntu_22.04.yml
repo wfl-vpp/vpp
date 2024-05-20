@@ -6,17 +6,16 @@
     - ubuntu_22_04
   block:
 
-    - name: register fqdn
-      command: "hostname --fqdn"
-      register: peer_fqdn
-      delegate_to: "{{ peers[0] | ipaddr('address') }}"
-
     - name: Change resolv conf file
       lineinfile:
         line: "nameserver 4.2.2.2"
         path: "/etc/resolv.conf"
         create: true
         state: present
+
+    - name: Get own fqdn
+      command: "hostname --fqdn"
+      register: my_fqdn
     
     - name: Normal setup fresh start
       when: only_switch_fs|bool == false
@@ -40,10 +39,18 @@
             state: present
           loop: "{{ required_packages }}"
         
-        - name: Creating the target working directory
+        - name: Creating the target working directories
           file:
-            path: "{{ ovpn_root }}"
+            path: "{{ item }}"
             state: directory
+          loop:
+            - "{{ ovpn_root }}"
+            - "/run/openvpn_irclient"
+
+        - name: Template the tmpfiles config
+          template:
+            src: "etc/tmpfiles.d/openvpn_irclient.conf"
+            dest: "/etc/tmpfiles.d/openvpn_irclient.conf"
         
         - name: Running the whole proxy setup for openvpn apt repo
           when: setup_apt_proxy|bool == true
@@ -96,13 +103,36 @@
             - stunnel
             - stunnel4
             - stunnel-ovpn
-        
-        - name: Copy secret file to Iran server {{ inventory_hostname }}
-          copy:
-            src: "/tmp/.secret_{{ inventory_hostname }}"
-            dest: "{{ secret_path }}"
-            mode: '0400'
-            force: yes
+
+
+        - name: Create the Secret file if it does not exist
+          block:
+
+            - name: Check if the secret file already exists on the server
+              stat:
+                path: "{{ secret_path }}"
+              register: secret_file_status
+
+            - name: If the secret file does not exist on the server
+              block:
+
+              - name: Generating Secret
+                command: /usr/sbin/openvpn --genkey secret {{ secret_path }}
+
+              - name: Fetch the secret from server
+                fetch:
+                  src: "{{ secret_path }}"
+                  dest: "/tmp/.secret_{{ inventory_hostname | ipaddr('address') }}"
+                  flat: yes
+                    
+              when: not secret_file_status.stat.exists
+
+            - name: If the secret file exists on the server fetch it to ansible host
+              fetch:
+                src: "{{ secret_path }}"
+                dest: "/tmp/.secret_{{ inventory_hostname | ipaddr('address') }}"
+                flat: yes
+              when: secret_file_status.stat.exists
         
         - name: Template Openvpn-client service
           template:
@@ -135,47 +165,43 @@
         - name: Stunnel specific setup
           block:
 
+            - name: Make sure stunnel directory exists under etc
+              file:
+                path: "/etc/stunnel"
+                state: "directory"
+
+            - name: Generate the required cert and key
+              shell: openssl req -x509 -newkey rsa:4096 -keyout {{ stunnel_key_file_path }} -out {{ stunnel_cert_file_path }} -sha256 -days {{ stunnel_cert_validity_days }} -nodes -subj "/C={{ stunnel_C }}/ST={{ stunnel_ST }}/L={{ stunnel_L}}/O={{ stunnel_O }}/OU={{ stunnel_OU }}/CN={{ my_fqdn.stdout }}"
+
+            - name: Copy the stunnel cert file to ansible host
+              fetch:
+                src: "{{ stunnel_cert_file_path }}"
+                dest: "/tmp/.stunnel_cert_{{ inventory_hostname }}.crt"
+                flat: yes
+
             - name: Template the stunnel config file
               template:
-                src: "etc/stunnel/stunnel-client.conf"
-                dest: "/etc/stunnel/stunnel-client.conf"
+                src: "etc/stunnel/stunnel-ovpn-server.conf"
+                dest: "/etc/stunnel/stunnel-ovpn-server.conf"
 
-            - name: Copy the peer certificate for stunnel to the server
-              copy:
-                src: "/tmp/.stunnel_cert_{{ inventory_hostname }}.crt"
-                dest: "/etc/stunnel/stunnel_peer_cert.crt"
-                mode: '0400'
-                force: yes
-
-    
-            - name: Make sure log and run directories exist for stunnel
-              file:
-                path: "{{ item }}"
-                state: directory
-                owner: stunnel4
-                group: stunnel4
-              loop:
-                - "/var/log/stunnel4"
-                - "/var/run/stunnel4"
-    
-            - name: Template the stunnel systemd service file
+            - name: Template the stunnel service file
               template:
-                src: "etc/systemd/system/stunnel-ovpn.service"
-                dest: "/etc/systemd/system/stunnel-ovpn.service"
+                src: "etc/systemd/system/stunnel-ovpn-server.service"
+                dest: "/etc/systemd/system/stunnel-ovpn-server.service"
 
-            - name: Systemd daemon-reload
+            - name: Reload systemd
               systemd:
                 daemon-reload: yes
 
-            - name: Start the stunnel service
+            - name: Start stunnel server
               systemd:
-                name: stunnel-ovpn.service
+                name: "stunnel-ovpn-server.service"
                 state: started
                 enabled: yes
+
             
           when: setup_stunnel|bool == true
 
-            
         - name: Start the client service on iran server
           systemd:
             name: openvpn-irclient
@@ -236,12 +262,6 @@
     - name: Only updating the FS related parts
       when: only_switch_fs|bool == true
       block:
-        - name: Copy secret file to Iran server {{ inventory_hostname }}
-          copy:
-            src: "/tmp/.secret_{{ inventory_hostname }}"
-            dest: "{{ secret_path }}"
-            mode: '0400'
-            force: yes
         
         - name: Template Openvpn-client service
           template:
@@ -251,8 +271,8 @@
 
         - name: Template the stunnel config
           template:
-            src: "etc/stunnel/stunnel-client.conf"
-            dest: "/etc/stunnel/stunnel-client.conf"
+            src: "etc/stunnel/stunnel-ovpn-server.conf"
+            dest: "/etc/stunnel/stunnel-ovpn-server.conf"
           when: setup_stunnel|bool == true
         
         - name: Systemd daemon reload
@@ -264,10 +284,4 @@
             name: openvpn-irclient
             state: restarted
             enabled: yes
-
-    - name: Remove local secret file
-      delegate_to: 127.0.0.1
-      file:
-        path: "/tmp/.secret_{{ inventory_hostname }}"
-        state: absent
 

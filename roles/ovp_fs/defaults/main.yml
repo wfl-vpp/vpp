@@ -5,8 +5,9 @@ remove_ovpn: false
 only_switch_fs: false
 
 setup_stunnel: false
-stunnel_package_name: "stunnel4"
-stunnel_listen_port: 443
+stunnel_package_name: "{% if setup_stunnel|bool %}stunnel4{% else %}zip{% endif %}" # if stunnel is not set up install zip or nothing
+stunnel_client_listen_port: 445
+stunnel_server_listen_port: 993
 stunnel_cert_file_path: "/opt/ovpn/stunnel-cert.pem"
 stunnel_key_file_path: "/opt/ovpn/stunnel-key.pem"
 stunnel_cert_validity_days: 3650
@@ -15,7 +16,7 @@ stunnel_ST: "Baden"
 stunnel_L: "WFL"
 stunnel_O: "WFL"
 stunnel_OU: "Freedom"
-stunnel_CN: "{{ ansible_fqdn }}"
+stunnel_CN: "tunnel"
 
 target_ssh_key : "keys/{{ inventory_hostname }}_ssh_key.pem"
 ansible_ssh_private_key_file : "{{ target_ssh_key }}"
@@ -30,7 +31,7 @@ up_script: "{{ovpn_root}}/up_script.sh"
 verbosity: 1
 ovpn_FS_server_proto: "tcp-server"
 ovpn_IS_client_proto: "tcp-client"
-fs_server_port: "{% if setup_stunnel|bool %}444{% else %}443{% endif %}" # If stunnel is to be setup, this should be something other than stunnel_listen_port
+fs_server_port: "{% if setup_stunnel|bool %}444{% else %}4443{% endif %}" # If stunnel is to be setup, this should be something other than stunnel_listen_port
 ic_logpath: "/var/log/openvpn-client.log"  # log path for client part on iran server
 is_logpath: "/var/log/openvpn-server.log"  # log path for server part on iran server
 fs_logpath: "/var/log/openvpn.log"  # log path for server part on foreign server

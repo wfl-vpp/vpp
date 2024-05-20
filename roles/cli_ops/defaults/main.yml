@@ -1,6 +1,6 @@
 # Default variables for Ubuntu systems
 ---
-output_conf_dir: "/root/configs/"
+output_conf_dir: "/root/bahador/may"
 num_of_cli: 1 # Default number of clients to add
 
 client: ""
@@ -13,7 +13,7 @@ ansible_ssh_private_key_file: "{{ target_ssh_key }}"
 ovpn_root: "/opt/ovpn"
 ovpn_pki: "{{ ovpn_root }}/pki"
 
-ovpn_client_dns_server: "10.200.0.1"
+ovpn_client_dns_server: "10.200.0.2"
 
 client_root: "{{ ovpn_root }}/clients"
 

@@ -1,10 +1,10 @@
 [Unit]
-Description=Stunnel Client Service for OpenVPN
+Description=Stunnel Service for OpenVPN
 
 [Service]
 Type=forking
 WorkingDirectory=/opt/ovpn/
-ExecStart=/usr/bin/stunnel4 /etc/stunnel/stunnel-client.conf
+ExecStart=/usr/bin/stunnel4 /etc/stunnel/stunnel-ovpn-server.conf
 SuccessExitStatus=0
 Restart=always
 

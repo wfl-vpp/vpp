@@ -8,11 +8,19 @@
     - name: Setup openvpn on ubuntu server
       debug:
         msg: "OpenVPN on ubuntu: {{ inventory_hostname }}"
+
+    - name: Get peer FQDN
+      command: "hostname --fqdn"
+      register: peer_fqdn
+      delegate_to: "{{ peer | ipaddr('address') }}"
     
-    - name: Creating the target working directory
+    - name: Creating the target working directories
       file:
-        path: "{{ ovpn_root }}"
+        path: "{{ item }}"
         state: directory
+      loop:
+        - "{{ ovpn_root }}"
+        - "/run/openvpn_foreign"
     
     - name: Disabling and removing auto-update
       apt:
@@ -46,31 +54,20 @@
         - stunnel
         - stunnel4
 
-    - name: Check if the secret file already exists on ansible host
-      stat:
-        path: "/tmp/.secret_{{ peer | ipaddr('address') }}"
-      register: secret_file_state
-      delegate_to: localhost
-    
-    - name: If secret file does not exist on ansible host create it on foreign server
-      block:
- 
-      - name: Generating Secret
-        command: /usr/sbin/openvpn --genkey secret {{ secret_path }}
-      
-      - name: Get the secret from foreign server
-        fetch:
-          src: "{{ secret_path }}"
-          dest: "/tmp/.secret_{{ peer | ipaddr('address') }}"
-          flat: yes
-      when: not secret_file_state.stat.exists
+    - name: Fetch the secret file from peer server to ansible
+      fetch:
+        src: "{{ secret_path }}"
+        dest: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+        flat: yes
+      delegate_to: "{{ peer | ipaddr('address') }}"
 
-    - name: If the secret file exists on the ansible host upload it to foreign server
+    - name: Copy the secret file to the fs server
       copy:
         src: "/tmp/.secret_{{ peer | ipaddr('address') }}"
         dest: "{{ secret_path }}"
-      when: secret_file_state.stat.exists
-    
+        mode: '0400'
+        force: yes
+
     - name: Template systemd service file
       template:
         src: "etc/systemd/system/openvpn-foreign.service"
@@ -96,37 +93,45 @@
         file:
           path: "/etc/stunnel"
           state: "directory"
-      
-      - name: Generate the required cert and key
-        shell: openssl req -x509 -newkey rsa:4096 -keyout {{ stunnel_key_file_path }} -out {{ stunnel_cert_file_path }} -sha256 -days {{ stunnel_cert_validity_days }} -nodes -subj "/C={{ stunnel_C }}/ST={{ stunnel_ST }}/L={{ stunnel_L}}/O={{ stunnel_O }}/OU={{ stunnel_OU }}/CN={{ stunnel_CN }}"
 
-      - name: Copy the stunnel cert file to ansible host
-        fetch:
-          src: "{{ stunnel_cert_file_path }}"
-          dest: "/tmp/.stunnel_cert_{{ peer | ipaddr('address') }}.crt"
-          flat: yes
+      - name: Make sure log and run direcotries exist
+        file:
+          path: "{{ item }}"
+          state: directory
+          owner: stunnel4
+          group: stunnel4
+        loop:
+          - "/var/log/stunnel4"
+          - "/var/run/stunnel4"
 
       - name: Template the stunnel config file
         template:
-          src: "etc/stunnel/stunnel-ovpn.conf"
-          dest: "/etc/stunnel/stunnel-ovpn.conf"
+          src: "etc/stunnel/stunnel-ovpn-client.conf"
+          dest: "/etc/stunnel/stunnel-ovpn-client.conf"
 
       - name: Template the stunnel service file
         template:
-          src: "etc/systemd/system/ovpn-stunnel.service"
-          dest: "/etc/systemd/system/ovpn-stunnel.service"
+          src: "etc/systemd/system/stunnel-ovpn-client.service"
+          dest: "/etc/systemd/system/stunnel-ovpn-client.service"
+
+      - name: Copy the stunnel peer certificate to the server
+        copy:
+          src: "/tmp/.stunnel_cert_{{ peer }}.crt"
+          dest: "/etc/stunnel/stunnel_peer_cert_{{ peer }}.crt"
+          mode: '0400'
+          force: yes
 
       - name: Reload systemd
         systemd:
           daemon-reload: yes
   
-      - name: Start Stunnel server
+      - name: Start Stunnel client service
         systemd:
-          name: "ovpn-stunnel.service"
+          name: "stunnel-ovpn-client.service"
           state: started
           enabled: yes
 
-      when: setup_stunnel | bool
+      when: setup_stunnel | bool == true
       
     - name: Enable and start OpenVPN iptables service
       systemd:
@@ -137,12 +142,22 @@
     - name: Systemd daemon-reload
       systemd:
         daemon_reload: yes
-    
+
     - name: Enable and start openvpn-foreign service
       systemd:
         name: openvpn-foreign
         state: started
         enabled: yes
+      ignore_errors: yes
+
+    - name: Check if the peer is reachable
+      command: ping -c3 10.200.0.1
+      register: ping_result
+
+    - name: Fail if peer is not reachable
+      fail:
+        msg: "Can't reachout to the peer at 10.200.0.1"
+      when: ping_result.rc != 0
     
     - name: Template routecheck service files
       template:
@@ -177,4 +192,11 @@
       template:
         src: "etc/logrotate.d/ovpn"
         dest: "/etc/logrotate.d/ovpn"
+
+
+    - name: Remove local secret file
+      delegate_to: 127.0.0.1
+      file:
+        path: "/tmp/.secret_{{ peer | ipaddr('address') }}"
+        state: absent
     

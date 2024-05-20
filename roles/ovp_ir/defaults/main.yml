@@ -4,6 +4,8 @@
 
 only_switch_fs: false
 
+preserve_users: false
+
 setup_ovpn_http_proxy: false
 squid_port: 3128
 squid_main_config: "/etc/squid/squid.conf"
@@ -12,7 +14,21 @@ iptables_path: "/usr/sbin/iptables"
 
 setup_stunnel: false
 stunnel_package_name: "{% if setup_stunnel|bool %}stunnel4{% else %}zip{% endif %}" # if stunnel is not set up install zip or nothing
-stunnel_listen_port: 445
+stunnel_client_listen_port: 445
+stunnel_server_listen_port: 993
+stunnel_cert_file_path: "/opt/ovpn/stunnel-cert.pem"
+stunnel_key_file_path: "/opt/ovpn/stunnel-key.pem"
+stunnel_cert_validity_days: 3650
+stunnel_C: "DE"
+stunnel_ST: "Baden"
+stunnel_L: "WFL"
+stunnel_O: "WFL"
+stunnel_OU: "Freedom"
+stunnel_CN: "tunnel"
+
+
+
+
 
 #### Packages
 required_packages:
@@ -59,7 +75,7 @@ verbosity: 1
 ovpn_FS_server_proto: "tcp-server"
 ovpn_IS_server_proto: "tcp-server"
 ovpn_IS_client_proto: "tcp-client"
-fs_server_port: 443
+fs_server_port: 4443
 is_server_port: 443
 ovpn_max_peer_rotate_interval: 120
 

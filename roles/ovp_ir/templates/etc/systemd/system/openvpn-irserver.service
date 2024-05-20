@@ -5,8 +5,9 @@ Description=OpenVPN Service - Iran server service
 Type=forking
 User=root
 WorkingDirectory={{ ovpn_root }}
-ExecStart=/usr/sbin/openvpn --config {{ ovpn_root }}/ovpn-irserver.conf
+ExecStart=/usr/sbin/openvpn --config {{ ovpn_root }}/ovpn-irserver.conf --writepid /run/openvpn_irserver/PID
 Restart=always
+PIDFile=/run/openvpn_irserver/PID
 
 [Install]
 WantedBy=multi-user.target

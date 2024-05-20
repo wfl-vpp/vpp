@@ -79,6 +79,12 @@
         - "{{ easyrsa_pki }}"
         - "{{ ovpn_pki }}"
         - "{{ ovpn_root }}"
+        - "/run/openvpn_irserver"
+
+    - name: Template the tmpfiles configs
+      template:
+        src: "etc/tmpfiles.d/openvpn_irserver.conf"
+        dest: "/etc/tmpfiles.d/openvpn_irserver.conf"
 
     - name: Create a check file for squid installation when http_proxy is used
       file:
@@ -86,43 +92,47 @@
         state: touch
       when: setup_ovpn_http_proxy|bool
     
-    - name: Templating the server openssl passfile
-      template:
-        src: "opt/ovpn/pki/.srvk"
-        dest: "{{ easyrsa_srv_k }}"
-        mode: '0400'
-    
-    - name: Unzipping EasyRSA to "{{ easyrsa_root }}" on the server
-      unarchive:
-        src: "easyrsa.zip"
-        dest: "{{ easyrsa_root }}"
-    
-    - name: Make sure the target directory does not exist
-      file:
-        path: "{{ easyrsa_root }}/src"
-        state: absent
-    
-    - name: Rename and copy the unzipped directory to the proper location
-      shell:
-        cmd: "mv {{ easyrsa_root }}/easy-rsa-release-3.0 {{ easyrsa_root }}/src"
-        chdir: "{{ easyrsa_root }}"
-    
-    - name: Remove the old easyrsa file
-      file:
-        path: "{{ easyrsa_root }}/easy-rsa-release-3.0"
-        state: absent
-    
-    - name: Templating the vars file for EasyRSA
-      template:
-        src: "opt/easyrsa/vars"
-        dest: "{{ easyrsa_root }}/vars"
-    
-    - name: Templating the easysetup script to the server
-      template:
-        src: "opt/easyrsa/easysetup.sh"
-        dest: "{{ easyrsa_root }}/easysetup.sh"
-        mode: '0755'
-    
+    - name: EasyRSA setup when preserve mode not set
+      when: not preserve_users|bool
+      block:
+        - name: Template the openssl passfile if not there
+          template:
+            src: "opt/ovpn/pki/.srvk"
+            dest: "{{ easyrsa_srv_k }}"
+            mode: '0400'
+        
+        - name: Unzipping EasyRSA to "{{ easyrsa_root }}" on the server
+          unarchive:
+            src: "easyrsa.zip"
+            dest: "{{ easyrsa_root }}"
+        
+        - name: Make sure the target directory does not exist
+          file:
+            path: "{{ easyrsa_root }}/src"
+            state: absent
+        
+        - name: Rename and copy the unzipped directory to the proper location
+          shell:
+            cmd: "mv {{ easyrsa_root }}/easy-rsa-release-3.0 {{ easyrsa_root }}/src"
+            chdir: "{{ easyrsa_root }}"
+        
+        - name: Remove the old easyrsa file
+          file:
+            path: "{{ easyrsa_root }}/easy-rsa-release-3.0"
+            state: absent
+        
+        - name: Templating the vars file for EasyRSA
+          template:
+            src: "opt/easyrsa/vars"
+            dest: "{{ easyrsa_root }}/vars"
+        
+        - name: Templating the easysetup script to the server
+          template:
+            src: "opt/easyrsa/easysetup.sh"
+            dest: "{{ easyrsa_root }}/easysetup.sh"
+            mode: '0755'
+        
+
     - name: Templating the openvpn config files to the server
       template:
         src: "opt/ovpn/ovpn-irserver.conf"
@@ -138,7 +148,8 @@
       shell:
         cmd: "{{ easyrsa_root }}/easysetup.sh"
         chdir: "{{ easyrsa_root }}"
-    
+      when: not preserve_users|bool
+
     - name: Adding a new policy routing table
       lineinfile:
         dest: "/etc/iproute2/rt_tables"
